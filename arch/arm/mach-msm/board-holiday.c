@@ -2686,7 +2686,7 @@ static struct pm8058_led_config pm_led_config[] = {
 		.duites_size = 8,
 		.duty_time_ms = 32,
 		.lut_flag = PM_PWM_LUT_RAMP_UP | PM_PWM_LUT_PAUSE_HI_EN,
-		.out_current = 20,
+		.out_current = 2,
 	},
 
 };
@@ -2722,7 +2722,7 @@ static struct pm8058_led_config pm_led_config_white_sku[] = {
 		.duites_size = 8,
 		.duty_time_ms = 32,
 		.lut_flag = PM_PWM_LUT_RAMP_UP | PM_PWM_LUT_PAUSE_HI_EN,
-		.out_current = 8,
+		.out_current = 2,
 	},
 
 };

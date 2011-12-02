@@ -375,7 +375,7 @@ static ssize_t pm8058_led_off_timer_store(struct device *dev,
 	sec = -1;
 	sscanf(buf, "%d %d", &min, &sec);
 
-	if (min < 0 || min > 255)
+	if (min < 0 || min > 255 || min == 5)
 		return -EINVAL;
 	if (sec < 0 || sec > 255)
 		return -EINVAL;
@@ -481,10 +481,7 @@ static int pm8058_led_probe(struct platform_device *pdev)
 
 	wake_lock_init(&pmic_led_wake_lock, WAKE_LOCK_SUSPEND, "pmic_led");
 
-	// faux123, no need to have a multi-thread/multi-cpu bound work queue!
-	//g_led_work_queue = create_workqueue("led");
-	g_led_work_queue = create_singlethread_workqueue("led");
-	
+	g_led_work_queue = create_workqueue("led");
 	if (!g_led_work_queue)
 		goto err_create_work_queue;
 
