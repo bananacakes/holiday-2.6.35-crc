@@ -83,6 +83,21 @@
 #define MASK_FM_ATTRIBUTE	(BIT_FM_HEADSET | BIT_FM_SPEAKER)
 #define MASK_USB_HEADSET	(BIT_USB_AUDIO_OUT)
 
+#define GOOGLE_BIT_HEADSET		(1 << 0)
+#define GOOGLE_BIT_HEADSET_NO_MIC	(1 << 1)
+#define GOOGLE_BIT_USB_HEADSET_ANLG	(1 << 2)
+#define GOOGLE_BIT_USB_HEADSET_DGTL	(1 << 3)
+#define GOOGLE_BIT_HDMI_AUDIO		(1 << 4)
+
+#define GOOGLE_SUPPORTED_HEADSETS	(GOOGLE_BIT_HEADSET | \
+					GOOGLE_BIT_HEADSET_NO_MIC | \
+					GOOGLE_BIT_USB_HEADSET_ANLG | \
+					GOOGLE_BIT_USB_HEADSET_DGTL | \
+					GOOGLE_BIT_HDMI_AUDIO)
+#define GOOGLE_HEADSETS_WITH_MIC	GOOGLE_BIT_HEADSET
+#define GOOGLE_USB_HEADSETS		(GOOGLE_BIT_USB_HEADSET_ANLG | \
+					GOOGLE_BIT_USB_HEADSET_DGTL)
+
 #define HS_DEF_MIC_ADC_10_BIT		200
 #define HS_DEF_MIC_ADC_15_BIT_MAX	25320
 #define HS_DEF_MIC_ADC_15_BIT_MIN	7447
@@ -142,9 +157,16 @@ enum {
 	HEADSET_MIC		= 2,
 	HEADSET_METRICO		= 3,
 	HEADSET_UNKNOWN_MIC	= 4,
-	HEADSET_TV_OUT		= 5,
-	HEADSET_BEATS		= 6,
+	HEADSET_UNSTABLE	= 5,
+	HEADSET_TV_OUT		= 6,
 	HEADSET_INDICATOR	= 7,
+	HEADSET_BEATS		= 8,
+	HEADSET_BEATS_SOLO	= 9,
+};
+
+enum {
+	GOOGLE_USB_AUDIO_UNPLUG	= 0,
+	GOOGLE_USB_AUDIO_ANLG	= 1,
 };
 
 enum {
@@ -260,7 +282,8 @@ struct htc_headset_mgr_info {
 	struct device *debug_dev;
 	struct mutex mutex_lock;
 
-	struct switch_dev sdev;
+	struct switch_dev sdev_h2w;
+	struct switch_dev sdev_usb_audio;
 	struct input_dev *input;
 	unsigned long insert_jiffies;
 
@@ -303,5 +326,9 @@ int headset_get_type(void);
 int headset_get_type_sync(int count, unsigned int interval);
 
 extern int switch_send_event(unsigned int bit, int on);
+
+#if defined(CONFIG_FB_MSM_TVOUT) && defined(CONFIG_ARCH_MSM8X60)
+extern void tvout_enable_detection(unsigned int on);
+#endif
 
 #endif

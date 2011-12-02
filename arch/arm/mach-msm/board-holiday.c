@@ -2589,6 +2589,13 @@ static struct htc_headset_8x60_platform_data htc_headset_8x60_data = {
 	.adc_remote	= {0, 1251, 1446, 3072, 3615, 6296},
 };
 
+static struct htc_headset_8x60_platform_data htc_headset_8x60_data_xb = {
+	.adc_mpp	= XOADC_MPP_10,
+	.adc_amux	= PM_MPP_AIN_AMUX_CH5,
+	.adc_mic_bias	= {14375, 26643},
+	.adc_remote	= {0, 722, 723, 2746, 2747, 6603},
+};
+
 static struct platform_device htc_headset_8x60 = {
 	.name	= "HTC_HEADSET_8X60",
 	.id	= -1,
@@ -2610,6 +2617,21 @@ static struct headset_adc_config htc_headset_mgr_config[] = {
 		.type = HEADSET_MIC,
 		.adc_max = 28920,
 		.adc_min = 7230,
+	},
+	{
+		.type = HEADSET_BEATS,
+		.adc_max = 21704,
+		.adc_min = 14605,
+	},
+	{
+		.type = HEADSET_BEATS_SOLO,
+		.adc_max = 14604,
+		.adc_min = 8676,
+	},
+	{
+		.type = HEADSET_NO_MIC, /* HEADSET_INDICATOR */
+		.adc_max = 8675,
+		.adc_min = 5784,
 	},
 	{
 		.type = HEADSET_NO_MIC,
@@ -5764,6 +5786,20 @@ static void __init holiday_init(void)
 					     msm_num_footswitch_devices);
 	/* 2nd CAM setting */
 	msm8x60_init_camera();
+
+	/* Accessory */
+	printk(KERN_INFO "[HS_BOARD] (%s) system_rev = %d\n", __func__,
+      system_rev);
+             if (system_rev > 2) {
+		htc_headset_pmic_data.key_gpio =
+			PM8058_GPIO_PM_TO_SYS(HOLIDAY_AUD_REMO_PRES);
+		htc_headset_8x60.dev.platform_data =
+			&htc_headset_8x60_data_xb;
+		htc_headset_mgr_data.headset_config_num =
+			ARRAY_SIZE(htc_headset_mgr_config);
+		htc_headset_mgr_data.headset_config = htc_headset_mgr_config;
+		printk(KERN_INFO "[HS_BOARD] (%s) Set MEMS config\n", __func__);
+	}
 
 	if (machine_is_holiday()) {
 		platform_add_devices(surf_devices,
