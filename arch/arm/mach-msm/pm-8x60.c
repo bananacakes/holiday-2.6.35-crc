@@ -617,6 +617,7 @@ EXPORT_SYMBOL(msm_pm_set_max_sleep_time);
 struct msm_pm_device {
 	unsigned int cpu;
 #ifdef CONFIG_HOTPLUG_CPU
+	unsigned long saved_acpu_rate;
 	struct completion cpu_killed;
 	unsigned int warm_boot;
 #endif
@@ -803,14 +804,9 @@ static void msm_pm_power_collapse(bool from_idle)
 
 	avsdscr_setting = avs_get_avsdscr();
 	avs_disable();
-
-	if (cpu_online(dev->cpu))
-		saved_acpuclk_rate = acpuclk_power_collapse();
-	else
-		saved_acpuclk_rate = 0;
-
-        if ((!from_idle) && (MSM_PM_DEBUG_CLOCK & msm_pm_debug_mask))
-			pr_info("CPU%u: %s: change clock rate (old rate = %lu)\n",
+	saved_acpuclk_rate = acpuclk_power_collapse();
+	if ((!from_idle) && (MSM_PM_DEBUG_CLOCK & msm_pm_debug_mask))
+		pr_info("CPU%u: %s: change clock rate (old rate = %lu)\n",
 			dev->cpu, __func__, saved_acpuclk_rate);
 
 	msm_pm_spm_power_collapse(dev, from_idle, true);
@@ -1255,8 +1251,12 @@ void platform_cpu_die(unsigned int cpu)
 	flush_cache_all();
 
 	for (;;) {
-		if (allow[MSM_PM_SLEEP_MODE_POWER_COLLAPSE])
+		if (allow[MSM_PM_SLEEP_MODE_POWER_COLLAPSE]) {
+			struct msm_pm_device *dev =
+				&__get_cpu_var(msm_pm_devices);
+			dev->saved_acpu_rate = acpuclk_get_rate(cpu);
 			msm_pm_power_collapse(false);
+		}
 		else if (allow[MSM_PM_SLEEP_MODE_POWER_COLLAPSE_STANDALONE])
 			msm_pm_power_collapse_standalone(false);
 		else if (allow[MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT])
@@ -1284,6 +1284,16 @@ int msm_pm_platform_secondary_init(unsigned int cpu)
 #ifdef CONFIG_VFP
 	vfp_reinit();
 #endif
+
+	if (dev->saved_acpu_rate) {
+		ret = acpuclk_set_rate(dev->cpu,
+				dev->saved_acpu_rate,
+				SETRATE_PC);
+		if (ret)
+			pr_err("CPU%u: %s: failed clock rate restore(%lu)\n",
+			dev->cpu, __func__, dev->saved_acpu_rate);
+		dev->saved_acpu_rate = 0;
+	}
 	ret = msm_spm_set_low_power_mode(MSM_SPM_MODE_CLOCK_GATING, false);
 
 	return ret;

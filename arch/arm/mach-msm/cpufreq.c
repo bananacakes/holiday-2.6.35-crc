@@ -147,8 +147,7 @@ static int msm_cpufreq_target(struct cpufreq_policy *policy,
 		goto done;
 	} else {
 		cancel_work_sync(&cpu_work->work);
-		INIT_COMPLETION(cpu_work->complete);
-		schedule_work_on(policy->cpu, &cpu_work->work);
+		init_completion(&cpu_work->complete);
 		queue_work_on(policy->cpu, msm_cpufreq_wq, &cpu_work->work);
 		wait_for_completion(&cpu_work->complete);
 	}
@@ -225,11 +224,10 @@ static int __cpuinit msm_cpufreq_init(struct cpufreq_policy *policy)
 #ifdef CONFIG_SMP
 	cpu_work = &per_cpu(cpufreq_work, policy->cpu);
 	INIT_WORK(&cpu_work->work, set_cpu_work);
-	init_completion(&cpu_work->complete);
 #endif
 /* set safe default min and max speeds */
-	policy->max = 1512000;
-	policy->min = 192000;
+	policy->max = 1188000;
+	policy->min = 384000;
 	return 0;
 }
 
@@ -279,7 +277,7 @@ static ssize_t store_mfreq(struct sysdev_class *class,
 	u64 val;
 
 	if (strict_strtoull(buf, 0, &val) < 0) {
-		pr_err("Invalid parameter to mfreq\n");
+		printk(KERN_ERR "Failed param conversion\n");
 		return 0;
 	}
 	if (val)
@@ -317,7 +315,7 @@ static int __init msm_cpufreq_register(void)
 	int err = sysfs_create_file(&cpu_sysdev_class.kset.kobj,
 		&attr_mfreq.attr);
 	if (err)
-		pr_err("Failed to create sysfs mfreq\n");
+		printk(KERN_ERR "Failed to create sysfs mfreq\n");
 
 	for_each_possible_cpu(cpu) {
 		mutex_init(&(per_cpu(cpufreq_suspend, cpu).suspend_mutex));
