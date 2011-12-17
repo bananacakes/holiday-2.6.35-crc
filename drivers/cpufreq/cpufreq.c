@@ -1074,6 +1074,7 @@ static int cpufreq_add_dev(struct sys_device *sys_dev)
 	struct cpufreq_policy *policy;
 	unsigned long flags;
 	unsigned int j;
+//	struct cpufreq_policy *cp;
 #ifdef CONFIG_HOTPLUG_CPU
 	int sibling;
 #endif
@@ -1128,14 +1129,22 @@ static int cpufreq_add_dev(struct sys_device *sys_dev)
 		struct cpufreq_policy *cp = per_cpu(cpufreq_cpu_data, sibling);
 		if (cp && cp->governor &&
 		    (cpumask_test_cpu(cpu, cp->related_cpus))) {
+                        dprintk("found sibling CPU, copying policy\n");
 			policy->governor = cp->governor;
+			policy->min = cp->min;
+			policy->max = cp->max;
+			policy->user_policy.min = cp->user_policy.min;
+			policy->user_policy.max = cp->user_policy.max;
 			found = 1;
 			break;
 		}
 	}
 #endif
 	if (!found)
+	{
+        	dprintk("failed to find sibling CPU, falling back to defaults\n");
 		policy->governor = CPUFREQ_DEFAULT_GOVERNOR;
+	}
 	/* call driver. From then on the cpufreq must be able
 	 * to accept all calls to ->verify and ->setpolicy for this CPU
 	 */
@@ -1146,7 +1155,17 @@ static int cpufreq_add_dev(struct sys_device *sys_dev)
 	}
 	policy->user_policy.min = policy->min;
 	policy->user_policy.max = policy->max;
+/*	if (found && cp)
 
+	{
+	// Calling the driver can overwrite policy frequencies again
+	dprintk("Overriding policy max and min with sibling settings\n");
+	policy->min = cp->min;
+	policy->max = cp->max;
+	policy->user_policy.min = cp->user_policy.min;
+	policy->user_policy.max = cp->user_policy.max;
+	}
+*/
 	blocking_notifier_call_chain(&cpufreq_policy_notifier_list,
 				     CPUFREQ_START, policy);
 
@@ -1320,12 +1339,28 @@ static int __cpufreq_remove_dev(struct sys_device *sys_dev)
 		cpufreq_driver->exit(data);
 	unlock_policy_rwsem_write(cpu);
 
+	cpufreq_debug_enable_ratelimit();
+
+#ifdef CONFIG_HOTPLUG_CPU
+	/* when the CPU which is the parent of the kobj is hotplugged
+	 * offline, check for siblings, and create cpufreq sysfs interface
+	 * and symlinks
+	 */
+	if (unlikely(cpumask_weight(data->cpus) > 1)) {
+		/* first sibling now owns the new sysfs dir */
+		cpumask_clear_cpu(cpu, data->cpus);
+		cpufreq_add_dev(get_cpu_sysdev(cpumask_first(data->cpus)));
+
+		/* finally remove our own symlink */
+		lock_policy_rwsem_write(cpu);
+		__cpufreq_remove_dev(sys_dev);
+	}
+#endif
+
 	free_cpumask_var(data->related_cpus);
 	free_cpumask_var(data->cpus);
 	kfree(data);
-	per_cpu(cpufreq_cpu_data, cpu) = NULL;
 
-	cpufreq_debug_enable_ratelimit();
 	return 0;
 }
 
@@ -2122,6 +2157,8 @@ static int __init cpufreq_core_init(void)
 
 #ifdef CONFIG_CPU_VOLTAGE_TABLE
 	rc = sysfs_create_group(cpufreq_global_kobject, &vddtbl_attr_group);
+#else
+	rc = 0;
 #endif	/* CONFIG_CPU_VOLTAGE_TABLE */
 
 	return 0;
