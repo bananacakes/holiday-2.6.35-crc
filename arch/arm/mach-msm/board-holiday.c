@@ -164,8 +164,9 @@ static int sensor_reset;
 extern void sii9234_change_usb_owner(bool bMHL);
 #endif //CONFIG_FB_MSM_HDMI_MHL
 
-#ifdef CONFIG_PERFLOCK
-extern unsigned int get_max_cpu_freq(void);
+#ifdef CONFIG_CPU_FREQ_GOV_ONDEMAND_2_PHASE
+int set_two_phase_freq(int cpufreq);
+int intelli_set_two_phase_freq(int cpufreq);
 #endif
 
 unsigned engineerid, mem_size_mb;
