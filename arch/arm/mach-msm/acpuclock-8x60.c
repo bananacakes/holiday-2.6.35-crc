@@ -723,7 +723,7 @@ static void __init scpll_init(int sc_pll)
 	 * might not use the full range of calibrated frequencies, but this
 	 * simplifies changes required for future increases in max CPU freq.
 	 */
-	regval = (L_VAL_SCPLL_CAL_MAX << 24) | (L_VAL_SCPLL_CAL_MIN << 16);
+	regval = (L_VAL_SCPLL_CAL_MAX << 29) | (L_VAL_SCPLL_CAL_MIN << 16);
 	writel(regval, sc_pll_base[sc_pll] + SCPLL_CAL_OFFSET);
 
 	/* Start calibration */
