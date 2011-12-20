@@ -45,7 +45,7 @@
 #define WDT0_BITE_TIME	(MSM_TMR0_BASE + 0x5C)
 
 /* Watchdog pet interval in ms */
-#define PET_DELAY 3000
+#define PET_DELAY 10000
 static unsigned long delay_time;
 static unsigned long long last_pet;
 
@@ -388,7 +388,7 @@ static void init_watchdog_work(struct work_struct *work)
 	delay_time = msecs_to_jiffies(PET_DELAY);
 
 	/* 32768 ticks = 1 second */
-	writel(32768*8, WDT0_BARK_TIME);
+	writel(32768*11, WDT0_BARK_TIME);
 	writel(32768*12, WDT0_BITE_TIME);
 
 	queue_delayed_work(msm_watchdog_wq, &dogwork_struct, delay_time);
