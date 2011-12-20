@@ -115,7 +115,7 @@
 #define S5K3H2YX_VCM_CODE_LSB 0x05
 #define S5K3H2YX_TOTAL_STEPS_NEAR_TO_FAR 42
 #define S5K3H2YX_SW_DAMPING_STEP 10
-#define S5K3H2YX_MAX_FPS 30
+#define S5K3H2YX_MAX_FPS 120
 
 /*=============================================================
  SENSOR REGISTER DEFINES
