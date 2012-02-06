@@ -52,10 +52,14 @@
  * The PLL hardware is capable of 384MHz to 1536MHz. The L_VALs
  * used for calibration should respect these limits. */
 #define L_VAL_SCPLL_CAL_MIN	0x08 /* =  432 MHz with 27MHz source */
+#ifdef CONFIG_NUTTER_MODE
+#define L_VAL_SCPLL_CAL_MAX	0x22 /* = 1836MHz with 27MHz source */
+#else
 #define L_VAL_SCPLL_CAL_MAX	0x1C /* = 1512 MHz with 27MHz source */
+#endif
 
-#define MAX_VDD_SC		1250000 /* uV */
-#define MIN_VDD_SC		 812500 /* uV */
+#define MAX_VDD_SC		1450000 /* uV */
+#define MIN_VDD_SC		 750000 /* uV */
 #define MAX_AXI			 310500 /* KHz */
 #define SCPLL_LOW_VDD_FMAX	 594000 /* KHz */
 #ifdef CONFIG_ARCH_MSM8X60_LTE
@@ -64,8 +68,6 @@
 #define SCPLL_LOW_VDD		1000000 /* uV */
 #endif
 #define SCPLL_NOMINAL_VDD	1100000 /* uV */
-
-#define FREQ_TBL_SIZE		33
 
 /* SCPLL Modes. */
 #define SCPLL_POWER_DOWN	0
@@ -97,6 +99,12 @@
 
 /* Speed bin register. */
 #define QFPROM_SPEED_BIN_ADDR		(MSM_QFPROM_BASE + 0x00C0)
+
+#ifdef CONFIG_NUTTER_MODE
+#define FREQ_TABLE_SIZE			56
+#else
+#define FREQ_TABLE_SIZE			46
+#endif
 
 static const void * const clk_ctl_addr[] = {SPSS0_CLK_CTL_ADDR,
 			SPSS1_CLK_CTL_ADDR};
@@ -174,6 +182,7 @@ static struct msm_bus_paths bw_level_tbl[] = {
 	[1] = BW_MBPS(1336), /* At least 167 MHz on bus. */
 	[2] = BW_MBPS(2008), /* At least 251 MHz on bus. */
 	[3] = BW_MBPS(2480), /* At least 310 MHz on bus. */
+	[4] = BW_MBPS(3200), /* At least 360 MHz on bus. */
 };
 
 static struct msm_bus_scale_pdata bus_client_pdata = {
@@ -203,12 +212,25 @@ static struct clkctl_l2_speed l2_freq_tbl_v2[] = {
 	[13] = {1080000,  1, 0x14, 1100000, 1200000, 2},
 	[14] = {1134000,  1, 0x15, 1100000, 1200000, 2},
 	[15] = {1188000,  1, 0x16, 1200000, 1200000, 3},
-	[16] = {1404000,  1, 0x1A, 1200000, 1250000, 3},
+	[16] = {1242000,  1, 0x17, 1200000, 1212500, 3},
+	[17] = {1296000,  1, 0x18, 1200000, 1225000, 3},
+	[18] = {1350000,  1, 0x19, 1200000, 1225000, 3},
+	[19] = {1404000,  1, 0x1A, 1200000, 1250000, 4},
+	[20] = {1458000,  1, 0x1B, 1225000, 1275000, 3},
+	[21] = {1512000,  1, 0x1C, 1225000, 1275000, 3},
+#ifdef CONFIG_NUTTER_MODE
+	[22] = {1566000,  1, 0x1D, 1225000, 1275000, 3},
+	[23] = {1620000,  1, 0x1E, 1250000, 1305000, 3},
+	[24] = {1674000,  1, 0x1F, 1275000, 1325000, 3},
+	[25] = {1728000,  1, 0x20, 1300000, 1355000, 3},
+	[26] = {1782000,   1, 0x21, 1325000, 1375000, 3},
+	[27] = {1836000,  1, 0x22, 1337500, 1387500, 3},
+#endif
 };
 
 #define L2(x) (&l2_freq_tbl_v2[(x)])
 /* SCPLL frequencies = 2 * 27 MHz * L_VAL */
-static struct clkctl_acpu_speed acpu_freq_tbl_v2[] = {
+static struct clkctl_acpu_speed acpu_freq_tbl_oc[] = {
   { {1, 1},  192000,  ACPU_PLL_8, 3, 1, 0, 0,    L2(1),   812500, 0x03006000},
   /* MAX_AXI row is used to source CPU cores and L2 from the AFAB clock. */
   { {0, 0},  MAX_AXI, ACPU_AFAB,  1, 0, 0, 0,    L2(0),   875000, 0x03006000},
@@ -222,21 +244,35 @@ static struct clkctl_acpu_speed acpu_freq_tbl_v2[] = {
   { {1, 1},  756000,  ACPU_SCPLL, 0, 0, 1, 0x0E, L2(7),  1000000, 0x03006000},
   { {1, 1},  810000,  ACPU_SCPLL, 0, 0, 1, 0x0F, L2(8),  1012500, 0x03006000},
   { {1, 1},  864000,  ACPU_SCPLL, 0, 0, 1, 0x10, L2(9),  1037500, 0x03006000},
-  { {1, 1},  918000,  ACPU_SCPLL, 0, 0, 1, 0x11, L2(10), 1062500, 0x03006000},
-  { {1, 1},  972000,  ACPU_SCPLL, 0, 0, 1, 0x12, L2(11), 1087500, 0x03006000},
-  { {1, 1}, 1026000,  ACPU_SCPLL, 0, 0, 1, 0x13, L2(12), 1125000, 0x03006000},
-  { {1, 1}, 1080000,  ACPU_SCPLL, 0, 0, 1, 0x14, L2(13), 1137500, 0x03006000},
-  { {1, 1}, 1134000,  ACPU_SCPLL, 0, 0, 1, 0x15, L2(14), 1162500, 0x03006000},
-  { {1, 1}, 1188000,  ACPU_SCPLL, 0, 0, 1, 0x16, L2(15), 1187500, 0x03006000},
-  { {1, 1}, 1512000,  ACPU_SCPLL, 0, 0, 1, 0x1C, L2(16), 1250000, 0x03006000},
+  { {1, 1},  918000,  ACPU_SCPLL, 0, 0, 1, 0x11, L2(10), 1037500, 0x03006000},
+  { {1, 1},  972000,  ACPU_SCPLL, 0, 0, 1, 0x12, L2(11), 1037500, 0x03006000},
+  { {1, 1}, 1026000,  ACPU_SCPLL, 0, 0, 1, 0x13, L2(12), 1050000, 0x03006000},
+  { {1, 1}, 1080000,  ACPU_SCPLL, 0, 0, 1, 0x14, L2(13), 1050000, 0x03006000},
+  { {1, 1}, 1134000,  ACPU_SCPLL, 0, 0, 1, 0x15, L2(14), 1075000, 0x03006000},
+  { {1, 1}, 1188000,  ACPU_SCPLL, 0, 0, 1, 0x16, L2(15), 1087500, 0x03006000},
+  { {1, 1}, 1242000,  ACPU_SCPLL, 0, 0, 1, 0x17, L2(16), 1150000, 0x03006000},
+  { {1, 1}, 1296000,  ACPU_SCPLL, 0, 0, 1, 0x18, L2(17), 1187500, 0x03006000},
+  { {1, 1}, 1350000,  ACPU_SCPLL, 0, 0, 1, 0x19, L2(18), 1200000, 0x03006000},
+  { {1, 1}, 1404000,  ACPU_SCPLL, 0, 0, 1, 0x1A, L2(19), 1200000, 0x03006000},
+  { {1, 1}, 1458000,  ACPU_SCPLL, 0, 0, 1, 0x1B, L2(20), 1200000, 0x03006000},
+  { {1, 1}, 1512000,  ACPU_SCPLL, 0, 0, 1, 0x1C, L2(21), 1200000, 0x03006000},
+#ifdef CONFIG_NUTTER_MODE
+  { {1, 1}, 1566000,  ACPU_SCPLL, 0, 0, 1, 0x1D, L2(22), 1225000, 0x03006000},
+  { {1, 1}, 1620000,  ACPU_SCPLL, 0, 0, 1, 0x1E, L2(22), 1250000, 0x03006000},
+  { {1, 1}, 1674000,  ACPU_SCPLL, 0, 0, 1, 0x1F, L2(22), 1275000, 0x03006000},
+  { {1, 1}, 1728000,  ACPU_SCPLL, 0, 0, 1, 0x20, L2(22), 1300000, 0x03006000},
+  { {1, 1}, 1782000,  ACPU_SCPLL, 0, 0, 1, 0x21, L2(22), 1325000, 0x03006000},
+  { {1, 1}, 1836000,  ACPU_SCPLL, 0, 0, 1, 0x22, L2(22), 1337500, 0x03006000},
+#endif
   { {0, 0}, 0 },
 };
+
 /* acpu_freq_tbl row to use when reconfiguring SC/L2 PLLs. */
 #define CAL_IDX 1
 
 static struct clkctl_acpu_speed *acpu_freq_tbl;
-static struct clkctl_l2_speed *l2_freq_tbl;
-static unsigned int l2_freq_tbl_size;
+static struct clkctl_l2_speed *l2_freq_tbl = l2_freq_tbl_v2;
+static unsigned int l2_freq_tbl_size = ARRAY_SIZE(l2_freq_tbl_v2);
 
 unsigned long acpuclk_get_rate(int cpu)
 {
@@ -824,7 +860,7 @@ static void __init bus_init(void)
 }
 
 #ifdef CONFIG_CPU_FREQ_MSM
-static struct cpufreq_frequency_table freq_table[NR_CPUS][FREQ_TBL_SIZE];
+static struct cpufreq_frequency_table freq_table[NR_CPUS][FREQ_TABLE_SIZE];
 
 static void __init cpufreq_table_init(void)
 {
@@ -872,11 +908,11 @@ static int __cpuinit acpuclock_cpu_callback(struct notifier_block *nfb,
 		prev_khz[cpu] = acpuclk_get_rate(cpu);
 		/* Fall through. */
 	case CPU_UP_CANCELED:
-	case CPU_UP_CANCELED_FROZEN:		
+	case CPU_UP_CANCELED_FROZEN:
 		acpuclk_set_rate(cpu, HOT_UNPLUG_KHZ, SETRATE_HOTPLUG);
 		break;
 	case CPU_UP_PREPARE:
-	case CPU_UP_PREPARE_FROZEN:	
+	case CPU_UP_PREPARE_FROZEN:
 		if (WARN_ON(!prev_khz[cpu]))
 			prev_khz[cpu] = acpu_freq_tbl->acpuclk_khz;
 		acpuclk_set_rate(cpu, prev_khz[cpu], SETRATE_HOTPLUG);
@@ -894,21 +930,17 @@ static struct notifier_block __cpuinitdata acpuclock_cpu_notifier = {
 
 static unsigned int __init select_freq_plan(void)
 {
-	uint32_t raw_speed_bin, speed_bin, max_khz;
+	uint32_t max_khz;
 	struct clkctl_acpu_speed *f;
 
-	acpu_freq_tbl = acpu_freq_tbl_v2;
-	l2_freq_tbl = l2_freq_tbl_v2;
-	l2_freq_tbl_size = ARRAY_SIZE(l2_freq_tbl_v2);
+#ifdef CONFIG_NUTTER_MODE
+	acpu_freq_tbl = acpu_freq_tbl_oc;
+	max_khz = 1836000;
+#else
+	acpu_freq_tbl = acpu_freq_tbl_oc;
+	max_khz = 1512000;
+#endif
 
-	raw_speed_bin = readl(QFPROM_SPEED_BIN_ADDR);
-	speed_bin = raw_speed_bin & 0xF;
-	if (speed_bin == 0xF)
-		speed_bin = (raw_speed_bin >> 4) & 0xF;
-	if (speed_bin == 0x1)
-		max_khz = 1512000;
-	else
-		max_khz = 1188000;
 
 	/* Truncate the table based to max_khz. */
 	for (f = acpu_freq_tbl; f->acpuclk_khz != 0; f++) {
@@ -943,9 +975,11 @@ void __init msm_acpu_clock_init(struct msm_acpu_clock_platform_data *clkdata)
 	regulator_init();
 	bus_init();
 
-	/* Improve boot time by ramping up CPUs immediately. */
+	/* Improve boot time by ramping up CPUs immediately, this must be set within safe 
+	*working limits removed "max_cpu_khz" as this will override policy->max parameters
+	*/
 	for_each_online_cpu(cpu)
-		acpuclk_set_rate(cpu, max_cpu_khz, SETRATE_INIT);
+		acpuclk_set_rate(cpu, 1512000, SETRATE_INIT);
 
 	cpufreq_table_init();
 	register_hotcpu_notifier(&acpuclock_cpu_notifier);
