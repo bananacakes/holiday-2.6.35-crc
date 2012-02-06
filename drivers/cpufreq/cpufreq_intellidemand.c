@@ -763,8 +763,8 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 #ifdef _LIMIT_LCD_OFF_CPU_MAX_FREQ_
 		if(!cpufreq_gov_lcd_status) {
 			if (policy->cur < policy->max) {
-				if (policy->cur < 540000) dbs_freq_increase(policy, 810000);
-				else if (policy->cur < 864000) dbs_freq_increase(policy, 1026000);
+				if (policy->cur < 245000) dbs_freq_increase(policy, 768000);
+				else if (policy->cur < 499200) dbs_freq_increase(policy, 998400);
 				else {
 					this_dbs_info->rate_mult = dbs_tuners_ins.sampling_down_factor;
 					dbs_freq_increase(policy, policy->max);
