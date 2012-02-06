@@ -403,6 +403,7 @@ static void cable_detect_handler(struct work_struct *w)
 #ifdef CONFIG_FB_MSM_HDMI_MHL_SII9234
 		case DOCK_STATE_MHL:
 			CABLE_INFO("MHL removed\n");
+			sii9234_disableIRQ();
 			switch_set_state(&dock_switch, DOCK_STATE_UNDOCKED);
 			break;
 #endif
@@ -621,6 +622,8 @@ static void mhl_status_notifier_func(bool isMHL, int charging_type)
 
 	if (!isMHL) {
 		CABLE_INFO("MHL removed\n");
+
+		sii9234_disableIRQ();
 
 		if (pInfo->usb_dpdn_switch)
 			pInfo->usb_dpdn_switch(PATH_USB);

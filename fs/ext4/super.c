@@ -2703,7 +2703,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 	sbi->s_inodes_per_block = blocksize / EXT4_INODE_SIZE(sb);
 	if (sbi->s_inodes_per_block == 0)
 		goto cantfind_ext4;
-	sbi->s_itb_per_group = sbi->s_inodes_per_group /
+	sbi->s_itb_per_group = (sbi->s_inodes_per_group + sbi->s_inodes_per_block - 1) /
 					sbi->s_inodes_per_block;
 	sbi->s_desc_per_block = blocksize / EXT4_DESC_SIZE(sb);
 	sbi->s_sbh = bh;

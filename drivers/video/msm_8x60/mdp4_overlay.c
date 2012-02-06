@@ -2321,7 +2321,11 @@ int mdp4_overlay_play(struct fb_info *info, struct msmfb_overlay_data *req,
 		pipe->src_w, pipe->src_h, pipe->srcp0_ystride,
 		pipe->dst_w, pipe->dst_h, pipe->mixer_num);
 #endif
-
+	if (((pipe->src_w > pipe->src_h && pipe->dst_w < pipe->dst_h) ||
+		(pipe->src_w < pipe->src_h && pipe->dst_w > pipe->dst_h))
+		&& pipe->mixer_num == MDP4_MIXER0) {
+		goto skip_frame;
+	}
 
 	if (pipe->pipe_num >= OVERLAY_PIPE_VG1)
 		mdp4_overlay_vg_setup(pipe);	/* video/graphic pipe */
@@ -2380,6 +2384,7 @@ int mdp4_overlay_play(struct fb_info *info, struct msmfb_overlay_data *req,
 		}
 	}
 
+skip_frame:
 	mdp4_stat.overlay_play[pipe->mixer_num]++;
 
 	if(virtualfb3d.is_3d && pipe->pipe_type == OVERLAY_TYPE_VIDEO)

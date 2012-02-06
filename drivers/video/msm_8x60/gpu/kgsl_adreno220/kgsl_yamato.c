@@ -1134,6 +1134,13 @@ static int kgsl_check_interrupt_timestamp(struct kgsl_device *device,
 	__ret;								\
 })
 
+#define kgsl_wait_event_interruptible_timeout(wq, condition, timeout)\
+({									\
+	long __ret = timeout;						\
+	__wait_event_interruptible_timeout(wq, condition, __ret);	\
+	__ret;								\
+})
+
 /* MUST be called with the device mutex held */
 static int kgsl_yamato_waittimestamp(struct kgsl_device *device,
 				unsigned int timestamp,
@@ -1141,6 +1148,7 @@ static int kgsl_yamato_waittimestamp(struct kgsl_device *device,
 {
 	long status = 0;
 	struct kgsl_yamato_device *yamato_device = KGSL_YAMATO_DEVICE(device);
+	struct kgsl_pwrctrl *pwr = &device->pwrctrl;
 
 	if (timestamp != yamato_device->ringbuffer.timestamp &&
 		timestamp_cmp(timestamp,
@@ -1155,10 +1163,20 @@ static int kgsl_yamato_waittimestamp(struct kgsl_device *device,
 		mutex_unlock(&device->mutex);
 		/* We need to make sure that the process is placed in wait-q
 		 * before its condition is called */
+		pwr->io_count = (pwr->io_count + 1) % 100;
+		if (pwr->io_count < pwr->io_fraction ||
+						pwr->io_fraction == 100){
 		status = kgsl_wait_io_event_interruptible_timeout(
 				device->wait_queue,
 				kgsl_check_interrupt_timestamp(device,
 					timestamp), msecs_to_jiffies(msecs));
+		} else {
+				status = kgsl_wait_event_interruptible_timeout(
+							device->wait_queue,
+							kgsl_check_interrupt_timestamp(device,
+							timestamp), msecs_to_jiffies(msecs));
+		}
+
 		mutex_lock(&device->mutex);
 
 		if (status > 0)

@@ -225,7 +225,6 @@ void	SiiMhlTxDrvTmdsControl( bool enable )
 		SET_BIT(TPI_SLAVE_ADDR, 0x80, 4);
 	    TPI_DEBUG_PRINT(("Drv: TMDS Output Enabled\n"));
 		SiiMhlTxDrvReleaseUpstreamHPDControl();  /* this triggers an EDID read */
-
 	}
 	else
 	{
@@ -578,34 +577,52 @@ static void ReleaseUsbIdSwitchOpen ( void )
 
 void CbusWakeUpPulseGenerator(void)
 {
+	uint8_t		regval;
+
 	TPI_DEBUG_PRINT(("Drv: CbusWakeUpPulseGenerator\n"));
 
-	I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, (I2C_ReadByte(TPI_SLAVE_ADDR, 0x96) | 0xC0));
+	regval = I2C_ReadByte(TPI_SLAVE_ADDR, 0x96);
+	/* I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, (I2C_ReadByte(TPI_SLAVE_ADDR, 0x96) | 0xC0));*/
+	regval |= 0xC0;
+	I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, regval);
 	DelayMS(T_SRC_WAKE_PULSE_WIDTH_1 - 2);	// adjust for code path
 
-	I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, (I2C_ReadByte(TPI_SLAVE_ADDR, 0x96) & 0x3F));
+	/* I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, (I2C_ReadByte(TPI_SLAVE_ADDR, 0x96) & 0x3F));*/
+	regval &= 0x3F;
+	I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, regval);
 	DelayMS(T_SRC_WAKE_PULSE_WIDTH_1 - 2);	// adjust for code path
 
-	I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, (I2C_ReadByte(TPI_SLAVE_ADDR, 0x96) | 0xC0));
+	/* I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, (I2C_ReadByte(TPI_SLAVE_ADDR, 0x96) | 0xC0));*/
+	regval |= 0xC0;
+	I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, regval);
 	DelayMS(T_SRC_WAKE_PULSE_WIDTH_1 - 2);	// adjust for code path
 
-	I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, (I2C_ReadByte(TPI_SLAVE_ADDR, 0x96) & 0x3F));
+	/* I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, (I2C_ReadByte(TPI_SLAVE_ADDR, 0x96) & 0x3F));*/
+	regval &= 0x3F;
+	I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, regval);
 	DelayMS(T_SRC_WAKE_PULSE_WIDTH_2 - 2);	// adjust for code path
 
-	I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, (I2C_ReadByte(TPI_SLAVE_ADDR, 0x96) | 0xC0));
+	/* I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, (I2C_ReadByte(TPI_SLAVE_ADDR, 0x96) | 0xC0));*/
+	regval |= 0xC0;
+	I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, regval);
 	DelayMS(T_SRC_WAKE_PULSE_WIDTH_1 - 2);	// adjust for code path
 
-	I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, (I2C_ReadByte(TPI_SLAVE_ADDR, 0x96) & 0x3F));
+	/* I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, (I2C_ReadByte(TPI_SLAVE_ADDR, 0x96) & 0x3F));*/
+	regval &= 0x3F;
+	I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, regval);
 	DelayMS(T_SRC_WAKE_PULSE_WIDTH_1 - 2);	// adjust for code path
 
-	I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, (I2C_ReadByte(TPI_SLAVE_ADDR, 0x96) | 0xC0));
+	/* I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, (I2C_ReadByte(TPI_SLAVE_ADDR, 0x96) | 0xC0));*/
+	regval |= 0xC0;
+	I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, regval);
 	DelayMS(T_SRC_WAKE_PULSE_WIDTH_1 - 2);	// adjust for code path
 
-	I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, (I2C_ReadByte(TPI_SLAVE_ADDR, 0x96) & 0x3F));
+	/* I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, (I2C_ReadByte(TPI_SLAVE_ADDR, 0x96) & 0x3F));*/
+	regval &= 0x3F;
+	I2C_WriteByte(TPI_SLAVE_ADDR, 0x96, regval);
 
 	DelayMS(T_SRC_WAKE_TO_DISCOVER);
 
-	TPI_DEBUG_PRINT(("Drv: CbusWakeUpPulseGenerator - end\n"));
 }
 
 static	void	ApplyDdcAbortSafety()
@@ -892,6 +909,14 @@ static void MhlTxDrvProcessDisconnection ( void )
 	}
 
 	SwitchToD3();
+}
+
+bool IsMHLConnection(void)
+{
+	if ((fwPowerState == POWER_STATE_D0_MHL) && (!initCbus))
+		return true;
+	else
+		return false;
 }
 
 void	CbusReset()

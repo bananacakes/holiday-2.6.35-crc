@@ -923,26 +923,6 @@ static unsigned int __init select_freq_plan(void)
 	return f->acpuclk_khz;
 }
 
-int processor_name_read_proc(char *page, char **start, off_t off,
-			   int count, int *eof, void *data)
-{
-	char *p = page;
-	uint32_t pte_efuse, speed_bin;
-
-	pte_efuse = readl(QFPROM_SPEED_BIN_ADDR);
-
-	speed_bin = pte_efuse & 0xF;
-	if (speed_bin == 0xF)
-		speed_bin = (pte_efuse >> 4) & 0xF;
-
-	if (speed_bin == 0x1)
-		p += sprintf(p, "1.5 GHz dualcore\n");
-	else
-		p += sprintf(p, "1.2 GHz dualcore\n");
-
-	return p - page;
-}
-
 void __init msm_acpu_clock_init(struct msm_acpu_clock_platform_data *clkdata)
 {
 	unsigned int max_cpu_khz;

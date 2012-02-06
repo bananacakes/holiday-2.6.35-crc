@@ -1420,6 +1420,7 @@ static int vfe31_capture(uint32_t num_frames_capture)
 		}
 	}
 	vfe31_ctrl->vfe_capture_count = num_frames_capture;
+	pr_info("[CAM] %s: vfe_capture_count =%d\n", __func__, vfe31_ctrl->vfe_capture_count);
 	irq_comp_mask	=
 		msm_io_r(vfe31_ctrl->vfebase + VFE_IRQ_COMP_MASK);
 
@@ -3177,7 +3178,9 @@ static void vfe31_process_snapshot_frame(void)
 		msm_io_w_mb(CAMIF_COMMAND_STOP_IMMEDIATELY,
 			vfe31_ctrl->vfebase +
 			VFE_CAMIF_COMMAND);
-	}
+	} else
+		pr_info("[CAM] vfe_capture_count= %d\n", vfe31_ctrl->vfe_capture_count);
+
 	if (p_sync->stereocam_enabled
 			&& (strcmp(vfe31_ctrl->s_info->sensor_name,"sp3d") == 0)
 			&& (vfe31_ctrl->vfe_capture_count == 1)) {
@@ -3324,6 +3327,11 @@ static void vfe31_process_output_path_irq_1_zsl(void)
 		&& vfe31_ctrl->outpath.out2.free_buf.available)) {
 		vfe31_process_zsl_frame();
 	} else {
+	pr_info("[CAM] %s, operation_mode = %d, cap_cnt = %d\n", __func__,
+		vfe31_ctrl->operation_mode, vfe31_ctrl->vfe_capture_count);
+	pr_info("[CAM] %s, free_buf out0 = %d, out1 = %d\n", __func__,
+		vfe31_ctrl->outpath.out0.free_buf.available, vfe31_ctrl->outpath.out1.free_buf.available);
+
 		vfe31_ctrl->outpath.out1.frame_drop_cnt++;
 		if (vfe31_ctrl->outpath.out1.frame_drop_cnt > 20) {
 			pr_err("[CAM] path_irq_1 - no free buffer!\n");

@@ -300,13 +300,16 @@ static ssize_t a1026_bootup_init(struct file *file, struct a1026img *img)
 	a1026_gpio_set_value(pdata->gpio_a1026_clk, 0);
 
 set_suspend_err:
-	if (pass && !rc)
-		pr_aud_info("%s: initialized!\n", __func__);
-	else
-		pr_aud_err("%s: initialization failed\n", __func__);
-
 	kfree(vp->data);
-	return rc;
+	if (pass && !rc) {
+		pr_aud_info("%s: initialized!\n", __func__);
+		return rc;
+	} else {
+		pr_aud_err("%s: initialization failed\n", __func__);
+		if (ctl_ops->recovery)
+			ctl_ops->recovery();
+		return -EFAULT;
+	}
 }
 
 unsigned char phonecall_receiver[] = {

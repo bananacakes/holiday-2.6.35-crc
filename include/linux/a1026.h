@@ -244,6 +244,7 @@ struct audience_ctl_ops {
 	int (*set_mic_state)(char miccase);
 	void (*selmic)(int en);
 	int (*support_bt)(void);
+	void (*recovery)(void);
 };
 
 void a1026_register_ctl_ops(struct audience_ctl_ops *a1026_ops);

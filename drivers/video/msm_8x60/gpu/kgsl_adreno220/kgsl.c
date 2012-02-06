@@ -464,7 +464,9 @@ void kgsl_early_suspend_driver(struct early_suspend *h)
 {
 	struct kgsl_device *device = container_of(h,
 					struct kgsl_device, display_off);
+	mutex_lock(&device->mutex);
 	kgsl_pwrctrl_pwrlevel_change(device, KGSL_PWRLEVEL_NOMINAL);
+	mutex_unlock(&device->mutex);
 }
 EXPORT_SYMBOL(kgsl_early_suspend_driver);
 
@@ -485,7 +487,9 @@ void kgsl_late_resume_driver(struct early_suspend *h)
 {
 	struct kgsl_device *device = container_of(h,
 					struct kgsl_device, display_off);
+	mutex_lock(&device->mutex);
 	kgsl_pwrctrl_pwrlevel_change(device, KGSL_PWRLEVEL_TURBO);
+	mutex_unlock(&device->mutex);
 }
 EXPORT_SYMBOL(kgsl_late_resume_driver);
 
@@ -898,7 +902,7 @@ static long kgsl_ioctl_device_waittimestamp(struct kgsl_device_private
 
 	/* Don't wait forever, set a max value for now */
 	if (param->timeout == -1)
-		param->timeout = 10 * MSEC_PER_SEC;
+		param->timeout = 60 * MSEC_PER_SEC;
 
 	result = dev_priv->device->ftbl.device_waittimestamp(dev_priv->device,
 					param->timestamp,

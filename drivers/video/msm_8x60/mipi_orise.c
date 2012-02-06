@@ -876,18 +876,58 @@ static unsigned char* mipi_orise_read_status(void)
 }
 #endif
 
-static struct dsi_cmd_desc sw_reset_cmd[] = {
-	{DTYPE_DCS_WRITE, 1, 0, 0, 10, sizeof(sw_reset), sw_reset}
-};
-
-static struct dsi_cmd_desc display_on_cmd[] = {
-	{DTYPE_DCS_WRITE, 1, 0, 0, 0, sizeof(display_on), display_on},
-	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(bkl_enable_cmds), bkl_enable_cmds}
-};
-
 static struct dsi_cmd_desc orise_cmd_backlight_cmds[] = {
 	{DTYPE_DCS_WRITE1, 1, 0, 0, 0,
 		sizeof(led_pwm1), led_pwm1},
+};
+
+static struct dsi_cmd_desc recover_chip_cmd[] = {
+	/* 1. S/W reset */
+	{DTYPE_DCS_WRITE, 1, 0, 0, 10, sizeof(sw_reset), sw_reset},
+
+	/* 2. initial sequence */
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(sony_orise_001), sony_orise_001},
+	{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(sony_orise_002), sony_orise_002},
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(sony_orise_003), sony_orise_003},
+	{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(sony_orise_004), sony_orise_004},
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(sony_gamma28_00), sony_gamma28_00},
+	{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(sony_gamma28_01), sony_gamma28_01},
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(sony_gamma28_02), sony_gamma28_02},
+	{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(sony_gamma28_03), sony_gamma28_03},
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(sony_gamma28_04), sony_gamma28_04},
+	{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(sony_gamma28_05), sony_gamma28_05},
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(sony_gamma28_06), sony_gamma28_06},
+	{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(sony_gamma28_07), sony_gamma28_07},
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(sony_gamma28_08), sony_gamma28_08},
+	{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(sony_gamma28_09), sony_gamma28_09},
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(sony_gamma28_10), sony_gamma28_10},
+	{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(sony_gamma28_11), sony_gamma28_11},
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(sony_gamma28_12), sony_gamma28_12},
+
+	{DTYPE_DCS_WRITE, 1, 0, 0, 120, sizeof(exit_sleep), exit_sleep},
+
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(pwm_freq_sel_cmds1), pwm_freq_sel_cmds1},
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(pwm_freq_sel_cmds2), pwm_freq_sel_cmds2},
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(pwm_dbf_cmds1), pwm_dbf_cmds1},
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(pwm_dbf_cmds2), pwm_dbf_cmds2},
+
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(enable_te), enable_te},
+	{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(set_tear_line), set_tear_line},
+
+	{DTYPE_MAX_PKTSIZE, 1, 0, 0, 0, sizeof(max_pktsize), max_pktsize},
+
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(no_video_mode1), no_video_mode1},
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(no_video_mode2), no_video_mode2},
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(no_wait_te1), no_wait_te1},
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(no_wait_te2), no_wait_te2},
+
+	/* 3. backlight */
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(led_pwm1), led_pwm1},
+
+	/* 4. display on */
+	{DTYPE_DCS_WRITE, 1, 0, 0, 0, sizeof(display_on), display_on},
+	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(bkl_enable_cmds), bkl_enable_cmds}
+
 };
 
 void mipi_orise_recover_chip(void)
@@ -897,10 +937,7 @@ void mipi_orise_recover_chip(void)
 	if (!is_perf_lock_active(&orise_perf_lock))
 		perf_lock(&orise_perf_lock);
 
-	mipi_dsi_cmds_tx(&orise_tx_buf, sw_reset_cmd, ARRAY_SIZE(sw_reset_cmd));
-	mipi_dsi_cmds_tx(&orise_tx_buf, sony_orise_cmd_on_cmds, ARRAY_SIZE(sony_orise_cmd_on_cmds));
-	mipi_dsi_cmds_tx(&orise_tx_buf, orise_cmd_backlight_cmds, ARRAY_SIZE(orise_cmd_backlight_cmds));
-	mipi_dsi_cmds_tx(&orise_tx_buf, display_on_cmd, ARRAY_SIZE(display_on_cmd));
+	mipi_dsi_cmds_tx(&orise_tx_buf, recover_chip_cmd, ARRAY_SIZE(recover_chip_cmd));
 
 	if (is_perf_lock_active(&orise_perf_lock))
 		perf_unlock(&orise_perf_lock);

@@ -694,6 +694,39 @@ dev_wlc_intvar_get(
 	return (error);
 }
 
+/* HTC_CSP_START */
+#define AP_TKIP_COUNTERMEASURES   1
+
+#ifdef AP_TKIP_COUNTERMEASURES
+static unsigned long mic_jif_cur = 0;
+static int mic_err_cnt = 0;
+static void wl_iw_mic_block(struct work_struct *work);
+DECLARE_DELAYED_WORK(start_mic, wl_iw_mic_block);
+
+static void wl_iw_mic_block(struct work_struct *work)
+{
+	int ret, cm;
+	printf("console: Driver: enter[%s]: Second MIC error in 60 seconds\n", __func__);
+
+		rtnl_lock();
+
+		/* Do not allow others to associate */
+		cm = 1;
+		printf("console: driver: set WLC_TKIP_COUNTERMEASURES!!\n");
+
+		ret = dev_wlc_ioctl(priv_dev, WLC_TKIP_COUNTERMEASURES, &cm, sizeof(cm));
+		if (ret != 0)
+			printf("console : driver %s: Failed to set WLC_TKIP_COUNTERMEASURES (err=%d)\n", __func__, ret);
+
+		/* Deauth all STAs */
+		ret = wl_iw_softap_deassoc_stations(priv_dev, NULL);
+		if (ret != 0)
+			printf("console:%s: Failed to deauth (err=%d)\n", __func__, ret);
+
+		rtnl_unlock();
+}
+#endif /*AP_TKIP_COUNTERMEASURES*/
+/* HTC_CSP_END */
 
 #if WIRELESS_EXT > 12
 static int
@@ -2723,7 +2756,8 @@ iwpriv_set_ap_config(struct net_device *dev,
 		}
 
 		extra[wrqu->data.length] = 0;
-		WL_SOFTAP((" Got str param in iw_point: %s\n", extra));
+		/* WL_SOFTAP((" Got str param in iw_point: %s\n", extra)); */
+		WL_SOFTAP((" Got str param in iw_point\n"));
 
 		memset(ap_cfg, 0, sizeof(struct ap_profile));
 
@@ -7501,8 +7535,10 @@ set_ap_cfg(struct net_device *dev, struct ap_profile *ap)
 	WL_SOFTAP(("wl_iw: set ap profile:\n"));
 	WL_SOFTAP(("	ssid = '%s'\n", ap->ssid));
 	WL_SOFTAP(("	security = '%s'\n", ap->sec));
+#if 0
 	if (ap->key[0] != '\0')
 		WL_SOFTAP(("	key = '%s'\n", ap->key));
+#endif
 	WL_SOFTAP(("	channel = %d\n", ap->channel));
 	WL_SOFTAP(("	max scb = %d\n", ap->max_scb));
 	WL_SOFTAP(("	hidden = %d\n", ap->closednet));
@@ -7750,8 +7786,10 @@ wl_iw_set_ap_security(struct net_device *dev, struct ap_profile *ap)
 	WL_SOFTAP(("wl_iw: set ap profile:\n"));
 	WL_SOFTAP(("	ssid = '%s'\n", ap->ssid));
 	WL_SOFTAP(("	security = '%s'\n", ap->sec));
+#if 0
 	if (ap->key[0] != '\0')
 		WL_SOFTAP(("	key = '%s'\n", ap->key));
+#endif
 	WL_SOFTAP(("	channel = %d\n", ap->channel));
 	WL_SOFTAP(("	max scb = %d\n", ap->max_scb));
 
@@ -7979,7 +8017,8 @@ get_parameter_from_string(
 				
 				memcpy(dst, param_str_begin, parm_str_len);
 				*((char *)dst + parm_str_len) = 0; 
-				WL_DEFAULT((" written as a string:%s\n", (char *)dst));
+				/* WL_DEFAULT((" written as a string:%s\n", (char *)dst)); */
+				WL_DEFAULT((" written as a string\n"));
 			break;
 
 		}
@@ -9660,6 +9699,27 @@ wl_iw_event(struct net_device *dev, wl_event_msg_t *e, void* data)
 		memcpy(micerrevt->src_addr.sa_data, &e->addr, ETHER_ADDR_LEN);
 		micerrevt->src_addr.sa_family = ARPHRD_ETHER;
 
+/* HTC_CSP_START */
+#ifdef AP_TKIP_COUNTERMEASURES
+		if (ap_cfg_running) {
+			if (mic_err_cnt == 0) {
+				mic_err_cnt++;
+				printf("Console : Driver :Rece WLC_E_MIC_ERROR 1st!!\n");
+				mic_jif_cur = jiffies;
+			} else if (mic_err_cnt == 1) {
+				if (jiffies_to_msecs(ABS((long)(jiffies-mic_jif_cur))) < 60000) {
+					printf("Console : Driver : Rece WLC_E_MIC_ERROR 2st less 60sec Issue the TKIP_countermeasure\n");
+					schedule_delayed_work(&start_mic, HZ);
+					mic_err_cnt = 0;
+				} else {
+					printf("Console : Driver : Rece WLC_E_MIC_ERROR 2st GT 60sec igonre\n");
+					mic_err_cnt = jiffies;
+				}
+			}
+		}
+#endif /* AP_TKIP_COUNTERMEASURES */
+/* HTC_CSP_END */
+
 		break;
 	}
 	case WLC_E_PMKID_CACHE: {
@@ -10459,6 +10519,12 @@ wl_iw_detach(void)
 #ifdef COEX_DHCP
 	wl_iw_bt_release();
 #endif 
+
+/* HTC_CSP_START */
+#ifdef AP_TKIP_COUNTERMEASURES
+	cancel_delayed_work_sync(&start_mic);
+#endif /* AP_TKIP_COUNTERMEASURES */
+/* HTC_CSP_END */
 
 #ifdef WL_PROTECT
 	wl_iw_protect_release();

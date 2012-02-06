@@ -515,6 +515,14 @@ int holiday_a1026_support_bt(void)
 	return 0;
 }
 
+void holiday_a1026_recovery(void)
+{
+	/*holiday a1026 chip broken. Enable sel2 to bypass a1026 chip.*/
+	pr_aud_info("Audience(A1026) chip failed. Start bypass machanism to recovery TX voice.\n");
+	support_audience = 0;
+	gpio_set_value(PM8058_GPIO_PM_TO_SYS(HOLIDAY_AUD_MIC_SEL2), 1);
+}
+
 void holiday_reset_3254(void)
 {
 	gpio_tlmm_config(msm_aic3254_reset_gpio[0], GPIO_CFG_ENABLE);
@@ -585,6 +593,7 @@ static struct audience_ctl_ops a1026ops = {
 	.set_mic_state = holiday_set_mic_state,
 	.selmic = holiday_selmic,
 	.support_bt = holiday_a1026_support_bt,
+	.recovery = holiday_a1026_recovery,
 };
 void holiday_aic3254_set_mode(int config, int mode)
 {

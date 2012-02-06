@@ -313,7 +313,7 @@ static void sdio_al_test_debugfs_cleanup(void)
 
 static int channel_name_to_id(char *name)
 {
-	pr_info(TEST_MODULE_NAME "%s: channel name %s\n",
+	pr_info(TEST_MODULE_NAME "%s: channel name %8.6s\n",
 		__func__, name);
 
 	if (!strncmp(name, "SDIO_RPC", strnlen("SDIO_RPC", CHANNEL_NAME_SIZE)))
@@ -463,7 +463,7 @@ static void check_test_completion(void)
 		if ((!tch) || (!tch->is_used) || (!tch->ch_ready))
 			continue;
 		if (!tch->test_completed) {
-			pr_info(TEST_MODULE_NAME ":Channel %s test is not "
+			pr_info(TEST_MODULE_NAME ":Channel %8.6s test is not "
 						 "completed",
 				tch->name);
 			return;
@@ -533,7 +533,7 @@ static int wait_for_result_msg(struct test_channel *test_ch)
 
 		if (read_avail == 0) {
 			pr_info(TEST_MODULE_NAME
-				": read_avail is 0 for chan %s\n",
+				": read_avail is 0 for chan %8.6s\n",
 				test_ch->name);
 			wait_event(test_ch->wait_q,
 				   atomic_read(&test_ch->rx_notify_count));
@@ -546,7 +546,7 @@ static int wait_for_result_msg(struct test_channel *test_ch)
 		ret = sdio_read(test_ch->ch, test_ch->buf, read_avail);
 		if (ret) {
 			pr_info(TEST_MODULE_NAME ":  sdio_read for chan"
-				"%s failed, err=%d.\n",
+				"%8.6s failed, err=%d.\n",
 				test_ch->name, -ret);
 			goto exit_err;
 		}
@@ -554,7 +554,7 @@ static int wait_for_result_msg(struct test_channel *test_ch)
 		if (test_ch->buf[0] != TEST_CONFIG_SIGNATURE) {
 			pr_info(TEST_MODULE_NAME ": Not a test_result "
 				"signature. expected 0x%x. received 0x%x "
-				"for chan %s\n",
+				"for chan %8.6s\n",
 				TEST_CONFIG_SIGNATURE,
 				test_ch->buf[0],
 				test_ch->name);
@@ -684,7 +684,7 @@ static int lpm_test_main_task(void *ptr)
 		read_avail = sdio_read_avail(test_ch->ch);
 		if (read_avail == 0) {
 			TEST_DBG(TEST_MODULE_NAME
-					":read_avail 0 for chan %s, "
+					":read_avail 0 for chan %8.6s, "
 					"wait for event\n",
 					test_ch->name);
 			wait_event(test_ch->wait_q,
@@ -694,7 +694,7 @@ static int lpm_test_main_task(void *ptr)
 			read_avail = sdio_read_avail(test_ch->ch);
 			if (read_avail == 0) {
 				pr_err(TEST_MODULE_NAME
-					":read_avail size %d for chan %s not as"
+					":read_avail size %d for chan %8.6s not as"
 					" expected\n",
 					read_avail, test_ch->name);
 				continue;
@@ -705,7 +705,7 @@ static int lpm_test_main_task(void *ptr)
 
 		ret = sdio_read(test_ch->ch, test_ch->buf, read_avail);
 		if (ret) {
-			pr_info(TEST_MODULE_NAME ":sdio_read for chan %s"
+			pr_info(TEST_MODULE_NAME ":sdio_read for chan %8.6s"
 						 " err=%d.\n",
 				test_ch->name, -ret);
 			goto exit_err;
@@ -716,7 +716,7 @@ static int lpm_test_main_task(void *ptr)
 		if (lpm_msg.signature != LPM_TEST_CONFIG_SIGNATURE) {
 			pr_err(TEST_MODULE_NAME ": Not lpm test_result "
 				"signature. expected 0x%x. received 0x%x "
-				"for chan %s\n",
+				"for chan %8.6s\n",
 				LPM_TEST_CONFIG_SIGNATURE,
 				lpm_msg.signature,
 				test_ch->name);
@@ -767,11 +767,11 @@ static int lpm_test_main_task(void *ptr)
 
 	test_ch->test_completed = 1;
 	if (modem_result && host_result) {
-		pr_info(TEST_MODULE_NAME ": Random LPM TEST_PASSED for ch %s",
+		pr_info(TEST_MODULE_NAME ": Random LPM TEST_PASSED for ch %8.6s",
 			test_ch->name);
 		test_ch->test_result = TEST_PASSED;
 	} else {
-		pr_info(TEST_MODULE_NAME ": Random LPM TEST_FAILED for ch %s",
+		pr_info(TEST_MODULE_NAME ": Random LPM TEST_FAILED for ch %8.6s",
 			test_ch->name);
 		test_ch->test_result = TEST_FAILED;
 	}
@@ -781,7 +781,7 @@ static int lpm_test_main_task(void *ptr)
 	return 0;
 
 exit_err:
-	pr_info(TEST_MODULE_NAME ": TEST FAIL for chan %s.\n",
+	pr_info(TEST_MODULE_NAME ": TEST FAIL for chan %8.6s.\n",
 		test_ch->name);
 	test_ch->test_completed = 1;
 	test_ch->test_result = TEST_FAILED;
@@ -936,7 +936,7 @@ static void lpm_test(struct test_channel *test_ch)
 	return;
 
 exit_err:
-	pr_info(TEST_MODULE_NAME ": TEST FAIL for chan %s.\n",
+	pr_info(TEST_MODULE_NAME ": TEST FAIL for chan %8.6s.\n",
 		test_ch->name);
 	test_ch->test_completed = 1;
 	test_ch->test_result = TEST_FAILED;
@@ -983,7 +983,7 @@ static void sender_test(struct test_channel *test_ch)
 
 
 	pr_info(TEST_MODULE_NAME
-		 ":SENDER TEST START for chan %s\n", test_ch->name);
+		 ":SENDER TEST START for chan %8.6s\n", test_ch->name);
 
 	while (packet_count < max_packet_count) {
 
@@ -995,7 +995,7 @@ static void sender_test(struct test_channel *test_ch)
 		random_num = get_random_int();
 		size = (random_num % test_ch->packet_length) + 1;
 
-		TEST_DBG(TEST_MODULE_NAME "SENDER WAIT FOR EVENT for chan %s\n",
+		TEST_DBG(TEST_MODULE_NAME "SENDER WAIT FOR EVENT for chan %8.6s\n",
 			test_ch->name);
 
 		/* wait for data ready event */
@@ -1025,7 +1025,7 @@ static void sender_test(struct test_channel *test_ch)
 
 		/* wait for read data ready event */
 		TEST_DBG(TEST_MODULE_NAME ":sender wait for rx data for "
-					  "chan %s\n",
+					  "chan %8.6s\n",
 			 test_ch->name);
 		read_avail = sdio_read_avail(test_ch->ch);
 		wait_event(test_ch->wait_q,
@@ -1036,7 +1036,7 @@ static void sender_test(struct test_channel *test_ch)
 
 		if (read_avail != size) {
 			pr_info(TEST_MODULE_NAME
-				":read_avail size %d for chan %s not as "
+				":read_avail size %d for chan %8.6s not as "
 				"expected size %d.\n",
 				read_avail, test_ch->name, size);
 			goto exit_err;
@@ -1046,7 +1046,7 @@ static void sender_test(struct test_channel *test_ch)
 
 		ret = sdio_read(test_ch->ch, test_ch->buf, size);
 		if (ret) {
-			pr_info(TEST_MODULE_NAME ":sender sdio_read for chan %s"
+			pr_info(TEST_MODULE_NAME ":sender sdio_read for chan %8.6s"
 						 " err=%d.\n",
 				test_ch->name, -ret);
 			goto exit_err;
@@ -1055,7 +1055,7 @@ static void sender_test(struct test_channel *test_ch)
 
 		if ((test_ch->buf[0] != packet_count) && (size != 1)) {
 			pr_info(TEST_MODULE_NAME ":sender sdio_read WRONG DATA"
-						 " for chan %s, size=%d\n",
+						 " for chan %8.6s, size=%d\n",
 				test_ch->name, size);
 			goto exit_err;
 		}
@@ -1066,21 +1066,21 @@ static void sender_test(struct test_channel *test_ch)
 
 		TEST_DBG(TEST_MODULE_NAME
 			 ":sender total rx bytes = 0x%x , packet#=%d, size=%d"
-			 " for chan %s\n",
+			 " for chan %8.6s\n",
 			 test_ch->rx_bytes, packet_count, size, test_ch->name);
 		TEST_DBG(TEST_MODULE_NAME
 			 ":sender total tx bytes = 0x%x , packet#=%d, size=%d"
-			 " for chan %s\n",
+			 " for chan %8.6s\n",
 			 test_ch->tx_bytes, packet_count, size, test_ch->name);
 
 	} /* end of while */
 
 	pr_info(TEST_MODULE_NAME
 		 ":SENDER TEST END: total rx bytes = 0x%x, "
-		 " total tx bytes = 0x%x for chan %s\n",
+		 " total tx bytes = 0x%x for chan %8.6s\n",
 		 test_ch->rx_bytes, test_ch->tx_bytes, test_ch->name);
 
-	pr_info(TEST_MODULE_NAME ": TEST PASS for chan %s.\n",
+	pr_info(TEST_MODULE_NAME ": TEST PASS for chan %8.6s.\n",
 		test_ch->name);
 	test_ch->test_completed = 1;
 	test_ch->test_result = TEST_PASSED;
@@ -1088,7 +1088,7 @@ static void sender_test(struct test_channel *test_ch)
 	return;
 
 exit_err:
-	pr_info(TEST_MODULE_NAME ": TEST FAIL for chan %s.\n",
+	pr_info(TEST_MODULE_NAME ": TEST FAIL for chan %8.6s.\n",
 		test_ch->name);
 	test_ch->test_completed = 1;
 	test_ch->test_result = TEST_FAILED;
@@ -1124,7 +1124,7 @@ static void a2_performance_test(struct test_channel *test_ch)
 	for (i = 0; i < packet_size / 2; i++)
 		buf16[i] = (u16) (i & 0xFFFF);
 
-	pr_info(TEST_MODULE_NAME ": A2 PERFORMANCE TEST START for chan %s\n",
+	pr_info(TEST_MODULE_NAME ": A2 PERFORMANCE TEST START for chan %8.6s\n",
 		test_ch->name);
 
 	start_jiffy = get_jiffies_64(); /* read the current time */
@@ -1147,8 +1147,8 @@ static void a2_performance_test(struct test_channel *test_ch)
 		/* use a func to avoid compiler optimizations */
 		write_avail = sdio_write_avail(test_ch->ch);
 		read_avail = sdio_read_avail(test_ch->ch);
-		TEST_DBG(TEST_MODULE_NAME ":channel %s, write_avail=%d, "
-					 "read_avail=%d for chan %s\n",
+		TEST_DBG(TEST_MODULE_NAME ":channel %8.6s, write_avail=%d, "
+					 "read_avail=%d for chan %8.6s\n",
 			test_ch->name, write_avail, read_avail,
 			test_ch->name);
 		if ((write_avail == 0) && (read_avail == 0)) {
@@ -1158,11 +1158,11 @@ static void a2_performance_test(struct test_channel *test_ch)
 		}
 
 		write_avail = sdio_write_avail(test_ch->ch);
-		TEST_DBG(TEST_MODULE_NAME ":channel %s, write_avail=%d\n",
+		TEST_DBG(TEST_MODULE_NAME ":channel %8.6s, write_avail=%d\n",
 			 test_ch->name, write_avail);
 		if (write_avail > 0) {
 			size = min(packet_size, write_avail) ;
-			TEST_DBG(TEST_MODULE_NAME ":tx size = %d for chan %s\n",
+			TEST_DBG(TEST_MODULE_NAME ":tx size = %d for chan %8.6s\n",
 				 size, test_ch->name);
 			test_ch->buf[0] = tx_packet_count;
 			test_ch->buf[(size/4)-1] = tx_packet_count;
@@ -1170,7 +1170,7 @@ static void a2_performance_test(struct test_channel *test_ch)
 			ret = sdio_write(test_ch->ch, test_ch->buf, size);
 			if (ret) {
 				pr_info(TEST_MODULE_NAME ":sdio_write err=%d"
-							 " for chan %s\n",
+							 " for chan %8.6s\n",
 					-ret, test_ch->name);
 				goto exit_err;
 			}
@@ -1179,7 +1179,7 @@ static void a2_performance_test(struct test_channel *test_ch)
 		}
 
 		read_avail = sdio_read_avail(test_ch->ch);
-		TEST_DBG(TEST_MODULE_NAME ":channel %s, read_avail=%d\n",
+		TEST_DBG(TEST_MODULE_NAME ":channel %8.6s, read_avail=%d\n",
 			 test_ch->name, read_avail);
 		if (read_avail > 0) {
 			size = min(packet_size, read_avail);
@@ -1188,7 +1188,7 @@ static void a2_performance_test(struct test_channel *test_ch)
 			if (ret) {
 				pr_info(TEST_MODULE_NAME ": sdio_read size %d "
 							 " err=%d"
-							 " for chan %s\n",
+							 " for chan %8.6s\n",
 					size, -ret, test_ch->name);
 				goto exit_err;
 			}
@@ -1198,11 +1198,11 @@ static void a2_performance_test(struct test_channel *test_ch)
 
 		TEST_DBG(TEST_MODULE_NAME
 			 ":total rx bytes = %d , rx_packet#=%d"
-			 " for chan %s\n",
+			 " for chan %8.6s\n",
 			 test_ch->rx_bytes, rx_packet_count, test_ch->name);
 		TEST_DBG(TEST_MODULE_NAME
 			 ":total tx bytes = %d , tx_packet#=%d"
-			 " for chan %s\n",
+			 " for chan %8.6s\n",
 			 test_ch->tx_bytes, tx_packet_count, test_ch->name);
 
 	} /* while (tx_packet_count < max_packets ) */
@@ -1213,21 +1213,21 @@ static void a2_performance_test(struct test_channel *test_ch)
 	time_msec = jiffies_to_msecs(delta_jiffies);
 
 	pr_info(TEST_MODULE_NAME ":total rx bytes = 0x%x , rx_packet#=%d for"
-				 " chan %s.\n",
+				 " chan %8.6s.\n",
 		test_ch->rx_bytes, rx_packet_count, test_ch->name);
 	pr_info(TEST_MODULE_NAME ":total tx bytes = 0x%x , tx_packet#=%d"
-				 " for chan %s.\n",
+				 " for chan %8.6s.\n",
 		test_ch->tx_bytes, tx_packet_count, test_ch->name);
 
 	total_bytes = (test_ch->tx_bytes + test_ch->rx_bytes);
 	pr_err(TEST_MODULE_NAME ":total bytes = %d, time msec = %d"
-				" for chan %s\n",
+				" for chan %8.6s\n",
 		   total_bytes , (int) time_msec, test_ch->name);
 
 	if (!test_ch->random_packet_size) {
 		throughput = (total_bytes / time_msec) * 8 / 1000;
 		pr_err(TEST_MODULE_NAME ":Performance = %d Mbit/sec for "
-					"chan %s\n",
+					"chan %8.6s\n",
 		       throughput, test_ch->name);
 	}
 
@@ -1245,17 +1245,17 @@ static void a2_performance_test(struct test_channel *test_ch)
 	}
 #endif
 
-	pr_err(TEST_MODULE_NAME ": A2 PERFORMANCE TEST END for chan %s.\n",
+	pr_err(TEST_MODULE_NAME ": A2 PERFORMANCE TEST END for chan %8.6s.\n",
 	       test_ch->name);
 
-	pr_err(TEST_MODULE_NAME ": TEST PASS for chan %s\n", test_ch->name);
+	pr_err(TEST_MODULE_NAME ": TEST PASS for chan %8.6s\n", test_ch->name);
 	test_ch->test_completed = 1;
 	test_ch->test_result = TEST_PASSED;
 	check_test_completion();
 	return;
 
 exit_err:
-	pr_err(TEST_MODULE_NAME ": TEST FAIL for chan %s\n", test_ch->name);
+	pr_err(TEST_MODULE_NAME ": TEST FAIL for chan %8.6s\n", test_ch->name);
 	test_ch->test_completed = 1;
 	test_ch->test_result = TEST_FAILED;
 	check_test_completion();
@@ -1283,7 +1283,7 @@ static void sender_no_loopback_test(struct test_channel *test_ch)
 		buf16[i] = (u16) (i & 0xFFFF);
 
 	pr_info(TEST_MODULE_NAME
-		 ":SENDER NO LP TEST START for chan %s\n", test_ch->name);
+		 ":SENDER NO LP TEST START for chan %8.6s\n", test_ch->name);
 
 	while (packet_count < max_packet_count) {
 
@@ -1296,7 +1296,7 @@ static void sender_no_loopback_test(struct test_channel *test_ch)
 		size = (random_num % test_ch->packet_length) + 1;
 
 		TEST_DBG(TEST_MODULE_NAME ":SENDER WAIT FOR EVENT "
-					  "for chan %s\n",
+					  "for chan %8.6s\n",
 			test_ch->name);
 
 		/* wait for data ready event */
@@ -1329,24 +1329,24 @@ static void sender_no_loopback_test(struct test_channel *test_ch)
 
 		TEST_DBG(TEST_MODULE_NAME
 			 ":sender total tx bytes = 0x%x , packet#=%d, size=%d"
-			 " for chan %s\n",
+			 " for chan %8.6s\n",
 			 test_ch->tx_bytes, packet_count, size, test_ch->name);
 
 	} /* end of while */
 
 	pr_info(TEST_MODULE_NAME
 		 ":SENDER TEST END: total tx bytes = 0x%x, "
-		 " for chan %s\n",
+		 " for chan %8.6s\n",
 		 test_ch->tx_bytes, test_ch->name);
 
 	modem_result = wait_for_result_msg(test_ch);
 
 	if (modem_result) {
-		pr_info(TEST_MODULE_NAME ": TEST PASS for chan %s.\n",
+		pr_info(TEST_MODULE_NAME ": TEST PASS for chan %8.6s.\n",
 			test_ch->name);
 		test_ch->test_result = TEST_PASSED;
 	} else {
-		pr_info(TEST_MODULE_NAME ": TEST FAILURE for chan %s.\n",
+		pr_info(TEST_MODULE_NAME ": TEST FAILURE for chan %8.6s.\n",
 			test_ch->name);
 		test_ch->test_result = TEST_FAILED;
 	}
@@ -1355,7 +1355,7 @@ static void sender_no_loopback_test(struct test_channel *test_ch)
 	return;
 
 exit_err:
-	pr_info(TEST_MODULE_NAME ": TEST FAIL for chan %s.\n",
+	pr_info(TEST_MODULE_NAME ": TEST FAIL for chan %8.6s.\n",
 		test_ch->name);
 	test_ch->test_completed = 1;
 	test_ch->test_result = TEST_FAILED;
@@ -1642,7 +1642,7 @@ static int test_start(void)
 		memset(&tch->lpm_test_db, 0, sizeof(tch->lpm_test_db));
 
 		if (!tch->ch_ready) {
-			pr_info(TEST_MODULE_NAME ":openning channel %s\n",
+			pr_info(TEST_MODULE_NAME ":openning channel %8.6s\n",
 				tch->name);
 			tch->ch_ready = true;
 			if (tch->ch_id == SDIO_SMEM) {
@@ -1655,7 +1655,7 @@ static int test_start(void)
 						notify);
 				if (ret) {
 					pr_info(TEST_MODULE_NAME
-						":openning channel %s failed\n",
+						":openning channel %8.6s failed\n",
 					tch->name);
 					tch->ch_ready = false;
 				}
@@ -1995,7 +1995,7 @@ ssize_t test_write(struct file *filp, const char __user *buf, size_t size,
 		break;
 	case 17:
 		pr_info(TEST_MODULE_NAME " -- host sender no LP for Diag, RPC, "
-					 "CIQ  --");
+					 "Cxx  --");
 		set_params_8k_sender_no_lp(test_ctx->test_ch_arr[SDIO_DIAG]);
 		set_params_8k_sender_no_lp(test_ctx->test_ch_arr[SDIO_CIQ]);
 		set_params_8k_sender_no_lp(test_ctx->test_ch_arr[SDIO_RPC]);
@@ -2039,7 +2039,7 @@ int test_channel_init(char *name)
 #endif
 
 	pr_debug(TEST_MODULE_NAME ":%s.\n", __func__);
-	pr_info(TEST_MODULE_NAME ": init test cahnnel %s.\n", name);
+	pr_info(TEST_MODULE_NAME ": init test cahnnel %8.6s.\n", name);
 
 	ch_id = channel_name_to_id(name);
 	pr_debug(TEST_MODULE_NAME ":id = %d.\n", ch_id);
@@ -2047,7 +2047,7 @@ int test_channel_init(char *name)
 		test_ch = kzalloc(sizeof(*test_ch), GFP_KERNEL);
 		if (test_ch == NULL) {
 			pr_err(TEST_MODULE_NAME ":kzalloc err for allocating "
-						"test_ch %s.\n",
+						"test_ch %8.6s.\n",
 			       name);
 			return -ENOMEM;
 		}
@@ -2089,8 +2089,13 @@ int test_channel_init(char *name)
 			}
 #endif
 		} else {
-			test_ch->workqueue =
-				create_singlethread_workqueue(test_ch->name);
+			if (strcmp(test_ch->name, "SDIO_CIQ"))
+				test_ch->workqueue =
+					create_singlethread_workqueue(test_ch->name);
+			else
+				test_ch->workqueue =
+					create_singlethread_workqueue("SDIO_C");
+
 			test_ch->test_work.test_ch = test_ch;
 			INIT_WORK(&test_ch->test_work.work, worker);
 

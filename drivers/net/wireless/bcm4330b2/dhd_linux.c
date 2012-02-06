@@ -2873,9 +2873,11 @@ dhd_bus_start(dhd_pub_t *dhdp)
         	dhdp->mac.octet[3], dhdp->mac.octet[4], dhdp->mac.octet[5] );
 		dhdp->pktfilter_count = 3;
 		/* add a default packet filter pattern */
+		#if 0
 		dhd_set_pktfilter(dhdp, 1, ALLOW_UNICAST, 0, "0xffffffffffff", mac_buf);
 		dhd_set_pktfilter(dhdp, 1, ALLOW_DHCP, 0, "0xffffffffffff000000000000ffff00000000000000000000000000000000000000000000ffff", "0xffffffffffff0000000000000800000000000000000000000000000000000000000000000044");
 		dhd_set_pktfilter(dhdp, 1, ALLOW_IPV6_MULTICAST, 0, "0xffff", "0x3333");
+		#endif
 	}
 #else
 	dhdp->pktfilter_count = 1;

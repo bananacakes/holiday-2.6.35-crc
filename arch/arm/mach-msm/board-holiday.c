@@ -1702,7 +1702,7 @@ static struct platform_device android_pmem_device = {
 static struct android_pmem_platform_data android_pmem_adsp_pdata = {
 	.name = "pmem_adsp",
 	.allocator_type = PMEM_ALLOCATORTYPE_BITMAP,
-	.cached = 0,
+	.cached = 1,
 };
 
 static struct platform_device android_pmem_adsp_device = {
@@ -1766,7 +1766,7 @@ void *pmem_setup_smi_region(void)
 static struct android_pmem_platform_data android_pmem_smipool_pdata = {
 	.name = "pmem_smipool",
 	.allocator_type = PMEM_ALLOCATORTYPE_BITMAP,
-	.cached = 0,
+	.cached = 1,
 	.request_region = pmem_request_smi_region,
 	.release_region = pmem_release_smi_region,
 	.setup_region = pmem_setup_smi_region,
@@ -2640,7 +2640,7 @@ static struct pm8058_led_config pm_led_config_white_sku[] = {
 		.duites_size = 8,
 		.duty_time_ms = 32,
 		.lut_flag = PM_PWM_LUT_RAMP_UP | PM_PWM_LUT_PAUSE_HI_EN,
-		.out_current = 2,
+		.out_current = 8,
 	},
 
 };
@@ -5731,9 +5731,7 @@ static void __init holiday_init(void)
 #endif
 
 #ifdef CONFIG_USB_ANDROID
-	/* not load usb driver in gift_mode mode*/
-	if (board_mfg_mode() != 7)
-		holiday_add_usb_devices();
+	holiday_add_usb_devices();
 #endif
 	msm_pm_set_platform_data(msm_pm_data, ARRAY_SIZE(msm_pm_data));
 	msm_cpuidle_set_states(msm_cstates, ARRAY_SIZE(msm_cstates),

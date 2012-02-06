@@ -257,7 +257,7 @@ void SiiMhlTxMscDetectCharger( uint8_t data1)
 			/* GPIO0_state=3; */
 
 			mscCmdInProgress = false;
-			SiiMhlTxReadDevcap(02); /* send ReadDevCapReg0x02 packet out; POW will be returned on next MhlCbusIsr( )*/
+			SiiMhlTxReadDevcap(02);		/* send ReadDevCapReg0x02 packet out; POW will be returned on next MhlCbusIsr( ) */
 			mscCmdInProgress = false;
 			Chk_Dongle_Step = 1;
 		}
@@ -271,11 +271,12 @@ void SiiMhlTxMscDetectCharger( uint8_t data1)
 				Low_dongle_GPIO0();
 
 				/* GPIO0_state = 0;  */
-				SiiMhlTxReadDevcap(02);	/* send ReadDevCapReg0x02 packet out; POW will be returned on next MhlCbusIsr( ) */
+				SiiMhlTxReadDevcap(02);			  /* send ReadDevCapReg0x02 packet out; POW will be returned on next MhlCbusIsr( ) */
 				mscCmdInProgress = false;
 				Chk_Dongle_Step = 2;
 			} else {
 
+/*				Chk_Dongle_Step=3; */
 				Chk_Dongle_Step = 0;
 
 				mhlTxConfig.mscState = MSC_STATE_POW_DONE;
@@ -287,18 +288,19 @@ void SiiMhlTxMscDetectCharger( uint8_t data1)
 					gStatusMHL = CONNECT_TYPE_NONE;
 					ProcessMhlStatus(true, false);
 				}
-				/* system should periodically call siiMhlTxReadDevcap(02), next siiMhlTxGetEvents( )  MhlCbusIsr( ) will on/off Vbus, set charge current here */
+				/*system should periodically call siiMhlTxReadDevcap(02), next siiMhlTxGetEvents( )  MhlCbusIsr( ) will on/off Vbus, set charge current here */
 			}
 		}
 
-		if (Chk_Dongle_Step == 2) {			   /* GPIO0_low=true*/
+		if (Chk_Dongle_Step == 2) {			   /*GPIO0_low=true */
 
-			mhlTxConfig.mscState = MSC_STATE_POW_DONE;				/* 02 ;*/
+			mhlTxConfig.mscState = MSC_STATE_POW_DONE;				/*02 ;*/
 			mscCmdInProgress = false;
 
+/*			Chk_Dongle_Step=3; */
 			Chk_Dongle_Step = 0;
 
-			if (data1 & 0x10) { 			 /* [bit4] POW ==1=AC charger attached */
+			if (data1 & 0x10) { 			 /*[bit4] POW ==1=AC charger attached*/
 				/* Set charge battery current=AC charger rating-100mA ; */
 
 				/* Enable battery charger; &*/
@@ -308,8 +310,9 @@ void SiiMhlTxMscDetectCharger( uint8_t data1)
 					ProcessMhlStatus(true, false);
 				}
 
-			} else { /* charger port only has USB source provide 5V/100mA , that just enough dongle to work, no more current to charge phone battery */
-				/* turn off phone VBUS output; */		   /* at least no need to send out 5V/100mA power */
+			} else {	/* charger port only has USB source provide 5V/100mA , that just enough dongle to work, no more current to charge phone battery */
+				/* turn off phone VBUS output; */
+				/* at least no need to send out 5V/100mA power*/
 				TPI_DEBUG_PRINT(("500mA charger!!\n"));
 				if (gStatusMHL != CONNECT_TYPE_USB) {
 					gStatusMHL = CONNECT_TYPE_USB;

@@ -524,15 +524,12 @@ const struct file_operations bad_sock_fops = {
  *	an inode not a file.
  */
 
-#if !defined(CONFIG_ARCH_MSM8X60_LTE)
 int add_or_remove_port(struct sock *sk, int add_or_remove);
-#endif
+
 void sock_release(struct socket *sock)
 {
-#if !defined(CONFIG_ARCH_MSM8X60_LTE)
 	if (sock->sk != NULL)
 		add_or_remove_port(sock->sk, 0);
-#endif
 
 	if (sock->ops) {
 		struct module *owner = sock->ops->owner;
@@ -1462,10 +1459,8 @@ SYSCALL_DEFINE2(listen, int, fd, int, backlog)
 			err = sock->ops->listen(sock, backlog);
 
 		fput_light(sock->file, fput_needed);
-#if !defined(CONFIG_ARCH_MSM8X60_LTE)
 		if (sock->sk != NULL)
 			add_or_remove_port(sock->sk, 1);
-#endif
 	}
 	return err;
 }

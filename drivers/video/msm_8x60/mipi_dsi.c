@@ -626,7 +626,6 @@ static int mipi_dsi_off(struct platform_device *pdev)
 
 	pr_info("%s+ \n", __func__);
 
-	//mipi_status = 0;
 	ret = panel_next_off(pdev);
 
 	dsi_mutex_lock();
@@ -862,7 +861,6 @@ static int mipi_dsi_on(struct platform_device *pdev)
 		clk_enable(mfd->ebi1_clk);
 #endif
 
-	//mipi_status = 1;
 	pr_info("%s-\n", __func__);
 
 	return ret;

@@ -1572,7 +1572,7 @@ static void ddl_set_default_enc_rc_params(
 	encoder->qp_range.min_qp = 0x1;
 	if (codec == VCD_CODEC_H264) {
 /*HTC_START*/
-		encoder->qp_range.min_qp = 0x4;
+		encoder->qp_range.min_qp = 0x5;
 /*HTC_END*/
 		encoder->qp_range.max_qp = 0x33;
 		encoder->session_qp.i_frame_qp = 0x14;
@@ -1715,7 +1715,7 @@ u32 ddl_set_default_decoder_buffer_req(struct ddl_decoder_data *decoder,
 	input_buf_req->min_count = 1;
 	input_buf_req->actual_count = input_buf_req->min_count + 1;
 	input_buf_req->max_count = DDL_MAX_BUFFER_COUNT;
-	input_buf_req->sz = (1024 * 1024 * 2);
+	input_buf_req->sz = (1024 * 1024);
 	input_buf_req->align = DDL_LINEAR_BUFFER_ALIGN_BYTES;
 	decoder->min_input_buf_req = *input_buf_req;
 	return true;

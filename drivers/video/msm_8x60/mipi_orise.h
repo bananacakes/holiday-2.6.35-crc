@@ -30,6 +30,8 @@
 #ifndef MIPI_ORISE_H
 #define MIPI_ORISE_H
 
+extern int mipi_status;
+
 int mipi_orise_device_register(struct msm_panel_info *pinfo,
 					u32 channel, u32 panel);
 

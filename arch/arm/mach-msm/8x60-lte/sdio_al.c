@@ -1181,7 +1181,7 @@ static u32 check_pending_rx_packet(struct sdio_channel *ch, u32 eot)
 
 
 	if (sdio_al_dev == NULL) {
-		pr_err(MODULE_NAME ": NULL sdio_al_dev for channel %s\n",
+		pr_err(MODULE_NAME ": NULL sdio_al_dev for channel %8.6s\n",
 				 ch->name);
 		return -EINVAL;
 	}
@@ -1491,7 +1491,7 @@ static int sdio_ch_write(struct sdio_channel *ch, const u8 *buf, u32 len)
 	static struct memc_counter memc = { caller: __func__ }; /* HTC */
 
 	if (len == 0) {
-		pr_err(MODULE_NAME ":channel %s trying to write 0 bytes\n",
+		pr_err(MODULE_NAME ":channel %8.6s trying to write 0 bytes\n",
 			ch->name);
 		return -EINVAL;
 	}
@@ -1505,7 +1505,7 @@ static int sdio_ch_write(struct sdio_channel *ch, const u8 *buf, u32 len)
 					       (void *) buf, blocks*blksz, &memc);
 			if (ret != 0) {
 				pr_err(MODULE_NAME ":%s: sdio_memcpy_toio "
-						   "failed for channel %s\n",
+						   "failed for channel %8.6s\n",
 							__func__, ch->name);
 				ch->sdio_al_dev->is_err = true;
 				return ret;
@@ -1523,7 +1523,7 @@ static int sdio_ch_write(struct sdio_channel *ch, const u8 *buf, u32 len)
 
 	if (ret != 0) {
 		pr_err(MODULE_NAME ":%s: sdio_write_cmd54 "
-				   "failed for channel %s\n",
+				   "failed for channel %8.6s\n",
 					__func__, ch->name);
 		ch->sdio_al_dev->is_err = true;
 		return ret;
@@ -1799,9 +1799,8 @@ static int read_sdioc_software_header(struct sdio_al_device *sdio_al_dev,
 			ch->is_valid = 1;
 			ch->sdio_al_dev = sdio_al_dev;
 		}
-
-		pr_info(MODULE_NAME ":Channel=%s, is_valid=%d\n", ch->name,
-			ch->is_valid);
+		pr_info(MODULE_NAME ":Channel=%8.6s, is_valid=%d\n", ch->name,
+				ch->is_valid);
 	}
 
 	return 0;
@@ -1826,7 +1825,7 @@ static int read_sdioc_channel_config(struct sdio_channel *ch)
 	static struct memc_counter memc = { caller: __func__ }; /* HTC */
 
 	if (sdio_al_dev == NULL) {
-		pr_err(MODULE_NAME ": NULL sdio_al_dev for channel %s\n",
+		pr_err(MODULE_NAME ": NULL sdio_al_dev for channel %8.6s\n",
 				 ch->name);
 		return -EINVAL;
 	}
@@ -1834,7 +1833,7 @@ static int read_sdioc_channel_config(struct sdio_channel *ch)
 	if (sdio_al_dev->sdioc_sw_header->version == 0)
 		return -1;
 
-	pr_debug(MODULE_NAME ":reading sw mailbox %s channel.\n", ch->name);
+	pr_debug(MODULE_NAME ":reading sw mailbox %8.6s channel.\n", ch->name);
 
 	sw_mailbox = kzalloc(sizeof(*sw_mailbox), GFP_KERNEL);
 	if (sw_mailbox == NULL)
@@ -1856,11 +1855,11 @@ static int read_sdioc_channel_config(struct sdio_channel *ch)
 		goto exit_err;
 	}
 
-	pr_info(MODULE_NAME ":ch_config %s max_rx_threshold=%d.\n",
+	pr_info(MODULE_NAME ":ch_config %8.6s max_rx_threshold=%d.\n",
 		ch->name, ch_config->max_rx_threshold);
-	pr_info(MODULE_NAME ":ch_config %s max_tx_threshold=%d.\n",
+	pr_info(MODULE_NAME ":ch_config %8.6s max_tx_threshold=%d.\n",
 		ch->name, ch_config->max_tx_threshold);
-	pr_info(MODULE_NAME ":ch_config %s tx_buf_size=%d.\n",
+	pr_info(MODULE_NAME ":ch_config %8.6s tx_buf_size=%d.\n",
 		ch->name, ch_config->tx_buf_size);
 
 	/* Aggregation up to 90% of the maximum size */
@@ -1876,7 +1875,7 @@ static int read_sdioc_channel_config(struct sdio_channel *ch)
 		ch->poll_delay_msec = DEFAULT_POLL_DELAY_NOPACKET_MSEC;
 		ch->min_write_avail = DEFAULT_MIN_WRITE_THRESHOLD_STREAMING;
 	}
-	pr_info(MODULE_NAME ":ch %s is_packet_mode=%d.\n",
+	pr_info(MODULE_NAME ":ch %8.6s is_packet_mode=%d.\n",
 		ch->name, ch->is_packet_mode);
 
 	/* The max_packet_size is set by the modem in version 3 and on */
@@ -1886,13 +1885,13 @@ static int read_sdioc_channel_config(struct sdio_channel *ch)
 	if (ch->min_write_avail > ch->write_threshold)
 		ch->min_write_avail = ch->write_threshold;
 
-	pr_info(MODULE_NAME ":ch %s read_threshold=%d.\n",
+	pr_info(MODULE_NAME ":ch %8.6s read_threshold=%d.\n",
 		ch->name, ch->read_threshold);
-	pr_info(MODULE_NAME ":ch %s write_threshold=%d.\n",
+	pr_info(MODULE_NAME ":ch %8.6s write_threshold=%d.\n",
 		ch->name, ch->write_threshold);
-	pr_info(MODULE_NAME ":ch %s def_read_threshold=%d.\n",
+	pr_info(MODULE_NAME ":ch %8.6s def_read_threshold=%d.\n",
 		ch->name, ch->def_read_threshold);
-	pr_info(MODULE_NAME ":ch %s min_write_avail=%d.\n",
+	pr_info(MODULE_NAME ":ch %8.6s min_write_avail=%d.\n",
 		ch->name, ch->min_write_avail);
 
 	ch->peer_tx_buf_size = ch_config->tx_buf_size;
@@ -2075,7 +2074,7 @@ static int sdio_al_enable_func_retry(struct sdio_func *func, const char *name)
 	for (i = 0; i < 200; i++) {
 		ret = sdio_enable_func(func);
 		if (ret) {
-			pr_debug(MODULE_NAME ":retry enable %s func#%d "
+			pr_debug(MODULE_NAME ":retry enable %8.6s func#%d "
 					     "ret=%d\n",
 					 name, func->num, ret);
 			msleep(10);
@@ -2099,7 +2098,7 @@ static int open_channel(struct sdio_channel *ch)
 	struct sdio_al_device *sdio_al_dev = ch->sdio_al_dev;
 
 	if (sdio_al_dev == NULL) {
-		pr_err(MODULE_NAME ": NULL sdio_al_dev for channel %s\n",
+		pr_err(MODULE_NAME ": NULL sdio_al_dev for channel %8.6s\n",
 				 ch->name);
 		return -EINVAL;
 	}
@@ -2120,7 +2119,7 @@ static int open_channel(struct sdio_channel *ch)
 
 	mutex_init(&ch->ch_lock);
 
-	pr_debug(MODULE_NAME ":open_channel %s func#%d\n",
+	pr_debug(MODULE_NAME ":open_channel %8.6s func#%d\n",
 			 ch->name, ch->func->num);
 
 	INIT_LIST_HEAD(&(ch->rx_size_list_head));
@@ -2264,7 +2263,7 @@ static int sdio_al_wake_up(struct sdio_al_device *sdio_al_dev,
 		} else { /* HTC */
 			getnstimeofday(&ts); rtc_time_to_tm(ts.tv_sec, &tm);
 			LPM_DEBUG(MODULE_NAME ":Wake up card %d (not by interrupt)"
-				" <%s> tx_total=%d, rx_total=%d,"
+				" <%8.6s> tx_total=%d, rx_total=%d,"
 				" write_avail=%d, read_avail=%d,(%d-%02d-%02d %02d:%02d:%02d)\n",
 				sdio_al_dev->card->host->index, ch->name, ch->total_tx_bytes,
 				ch->total_rx_bytes, ch->write_avail, ch->read_avail,
@@ -2614,7 +2613,7 @@ int sdio_open(const char *name, struct sdio_channel **ret_ch, void *priv,
 
 	ch = find_channel_by_name(name);
 	if (ch == NULL) {
-		pr_err(MODULE_NAME ":Can't find channel name %s\n", name);
+		pr_err(MODULE_NAME ":Can't find channel name %8.6s\n", name);
 		return -EINVAL;
 	}
 
@@ -2625,7 +2624,7 @@ int sdio_open(const char *name, struct sdio_channel **ret_ch, void *priv,
 	sdio_claim_host(sdio_al_dev->card->sdio_func[0]);
 
 	if (ch->is_open) {
-		pr_err(MODULE_NAME ":Channel already opened %s\n", name);
+		pr_err(MODULE_NAME ":Channel already opened %8.6s\n", name);
 		ret = -EPERM;
 		goto exit_err;
 	}
@@ -2655,20 +2654,20 @@ int sdio_open(const char *name, struct sdio_channel **ret_ch, void *priv,
 
 	ret = open_channel(ch);
 	if (ret) {
-		pr_err(MODULE_NAME ":sdio_open %s err=%d\n", name, -ret);
+		pr_err(MODULE_NAME ":sdio_open %8.6s err=%d\n", name, -ret);
 		goto exit_err;
 	}
 
-	pr_info(MODULE_NAME ":sdio_open %s completed OK\n", name);
+	pr_info(MODULE_NAME ":sdio_open %8.6s completed OK\n", name);
 	if (sdio_al_dev->lpm_chan == INVALID_SDIO_CHAN) {
 		if (sdio_al->sdioc_major == PEER_SDIOC_OLD_VERSION_MAJOR) {
 			if (!ch->is_packet_mode) {
-				pr_info(MODULE_NAME ":setting channel %s as "
+				pr_info(MODULE_NAME ":setting channel %8.6s as "
 						    "lpm_chan\n", name);
 				sdio_al_dev->lpm_chan = ch->num;
 			}
 		} else {
-			pr_info(MODULE_NAME ":setting channel %s as lpm_chan\n",
+			pr_info(MODULE_NAME ":setting channel %8.6s as lpm_chan\n",
 				name);
 			sdio_al_dev->lpm_chan = ch->num;
 		}
@@ -2712,7 +2711,7 @@ int sdio_write_avail(struct sdio_channel *ch)
 		return -ENODEV;
 	}
 
-	pr_debug(MODULE_NAME ":sdio_write_avail %s 0x%x\n",
+	pr_debug(MODULE_NAME ":sdio_write_avail %8.6s 0x%x\n",
 			 ch->name, ch->write_avail);
 
 	return ch->write_avail;
@@ -2735,7 +2734,7 @@ int sdio_read_avail(struct sdio_channel *ch)
 		return -ENODEV;
 	}
 
-	pr_debug(MODULE_NAME ":sdio_read_avail %s 0x%x\n",
+	pr_debug(MODULE_NAME ":sdio_read_avail %8.6s 0x%x\n",
 			 ch->name, ch->read_avail);
 
 	return ch->read_avail;
@@ -2766,7 +2765,7 @@ int sdio_read(struct sdio_channel *ch, void *data, int len)
 		return -ENODEV;
 	}
 	if (len == 0) {
-		pr_err(MODULE_NAME ":channel %s trying to read 0 bytes\n",
+		pr_err(MODULE_NAME ":channel %8.6s trying to read 0 bytes\n",
 		       ch->name);
 		return -EINVAL;
 	}
@@ -2783,7 +2782,7 @@ int sdio_read(struct sdio_channel *ch, void *data, int len)
 
 	/* HTC: reader checking at read mailbox */
 	atomic_inc(&reader_count);
-	pr_debug(MODULE_NAME ": %s %s() start, reader_count %d\n",
+	pr_debug(MODULE_NAME ": %8.6s %s() start, reader_count %d\n",
 		ch->name, __func__, atomic_read(&reader_count));
 	sdio_claim_host(sdio_al_dev->card->sdio_func[0]);
 
@@ -2801,21 +2800,21 @@ int sdio_read(struct sdio_channel *ch, void *data, int len)
 		atomic_dec(&reader_count); /* HTC */
 		return -ENODEV;
 	}
-    if (!ch->is_open) {
-        pr_err(MODULE_NAME ":reading from closed channel %s\n",
-                 ch->name);
-        sdio_release_host(sdio_al_dev->card->sdio_func[0]);
-        atomic_dec(&reader_count); /* HTC */
-        return -EINVAL;
-    }
+	if (!ch->is_open) {
+		pr_err(MODULE_NAME ":reading from closed channel %8.6s\n",
+			ch->name);
+		sdio_release_host(sdio_al_dev->card->sdio_func[0]);
+		atomic_dec(&reader_count); /* HTC */
+		return -EINVAL;
+	}
 
-	DATA_DEBUG(MODULE_NAME ":start ch %s read %d avail %d.\n",
+	DATA_DEBUG(MODULE_NAME ":start ch %8.6s read %d avail %d.\n",
 		ch->name, len, ch->read_avail);
 
 	restart_inactive_time(sdio_al_dev);
 
 	if ((ch->is_packet_mode) && (len != ch->read_avail)) {
-		pr_err(MODULE_NAME ":sdio_read ch %s len != read_avail\n",
+		pr_err(MODULE_NAME ":sdio_read ch %8.6s len != read_avail\n",
 				 ch->name);
 		sdio_release_host(sdio_al_dev->card->sdio_func[0]);
 		atomic_dec(&reader_count); /* HTC */
@@ -2823,7 +2822,7 @@ int sdio_read(struct sdio_channel *ch, void *data, int len)
 	}
 
 	if (len > ch->read_avail) {
-		pr_err(MODULE_NAME ":ERR ch %s: reading more bytes (%d) than"
+		pr_err(MODULE_NAME ":ERR ch %8.6s: reading more bytes (%d) than"
 				   " the avail(%d).\n",
 				ch->name, len, ch->read_avail);
 		sdio_release_host(sdio_al_dev->card->sdio_func[0]);
@@ -2837,14 +2836,14 @@ int sdio_read(struct sdio_channel *ch, void *data, int len)
        lpm policy says we can't go to sleep when we have pending rx data,
        so either we had rx interrupt and woken up, or we never went to
        sleep */
-    if (unlikely(sdio_al_dev->is_ok_to_sleep)) {
-        pr_info(MODULE_NAME ":%s: called when is_ok_to_sleep is set "
-               "for ch %s, len=%d, last_any_read_avail=%d,"
-               "last_read_avail=%d, last_old_read_avail=%d",
-               __func__, ch->name, len,
-		       ch->statistics.last_any_read_avail,
-		       ch->statistics.last_read_avail,
-		       ch->statistics.last_old_read_avail);
+	if (unlikely(sdio_al_dev->is_ok_to_sleep)) {
+		pr_info(MODULE_NAME ":%s: called when is_ok_to_sleep is set "
+			"for ch %8.6s, len=%d, last_any_read_avail=%d,"
+			"last_read_avail=%d, last_old_read_avail=%d",
+			__func__, ch->name, len,
+			ch->statistics.last_any_read_avail,
+			ch->statistics.last_read_avail,
+			ch->statistics.last_old_read_avail);
 
         /* HTC: Prevent from calling sdio_memcpy_fromio without turning on clock
             Don't call BUG_ON for this case. htc: recover this case instead */
@@ -2880,7 +2879,7 @@ int sdio_read(struct sdio_channel *ch, void *data, int len)
 		ch->read_avail -= len;
 
 	ch->total_rx_bytes += len;
-	DATA_DEBUG(MODULE_NAME ":end ch %s read %d avail %d total %d.\n",
+	DATA_DEBUG(MODULE_NAME ":end ch %8.6s read %d avail %d total %d.\n",
 		ch->name, len, ch->read_avail, ch->total_rx_bytes);
 
 	if ((ch->read_avail == 0) && !(ch->is_packet_mode))
@@ -2892,7 +2891,7 @@ int sdio_read(struct sdio_channel *ch, void *data, int len)
 			|| (sdio_al->debug.debug_lpm_on))) {
 			struct timespec ts; struct rtc_time tm;
 			getnstimeofday(&ts); rtc_time_to_tm(ts.tv_sec, &tm);
-			pr_info(MODULE_NAME ": card%d, <%s> %s"
+			pr_info(MODULE_NAME ": card%d, <%8.6s> %s"
 				" from interrupt,"
 				" tx_total=%d, rx_total=%d, write_avail=%d,"
 				" read_avail=%d,"
@@ -2917,7 +2916,7 @@ int sdio_read(struct sdio_channel *ch, void *data, int len)
 
 	/* HTC */
 	atomic_dec(&reader_count);
-	pr_debug(MODULE_NAME ": %s %s() end, reader_count %d\n",
+	pr_debug(MODULE_NAME ": %8.6s %s() end, reader_count %d\n",
 		ch->name, __func__, atomic_read(&reader_count));
 
 	return ret;
@@ -2951,7 +2950,7 @@ int sdio_write(struct sdio_channel *ch, const void *data, int len)
 		return -ENODEV;
 	}
 	if (len == 0) {
-		pr_err(MODULE_NAME ":channel %s trying to write 0 bytes\n",
+		pr_err(MODULE_NAME ":channel %8.6s trying to write 0 bytes\n",
 			ch->name);
 		/* ++SSD_RIL: Mars_Lin@20110809: For sdio_write COMPLETION. */
 		sdio_write_end();
@@ -2978,7 +2977,7 @@ int sdio_write(struct sdio_channel *ch, const void *data, int len)
 
 	/* HTC: writer checking at read mailbox */
 	atomic_inc(&writer_count);
-	pr_debug(MODULE_NAME ": %s %s() start, writer_count %d\n",
+	pr_debug(MODULE_NAME ": %8.6s %s() start, writer_count %d\n",
 		ch->name, __func__, atomic_read(&writer_count));
 
 	sdio_claim_host(sdio_al_dev->card->sdio_func[0]);
@@ -3007,7 +3006,7 @@ int sdio_write(struct sdio_channel *ch, const void *data, int len)
 	}
 
 	if (!ch->is_open) {
-		pr_err(MODULE_NAME ":writing to closed channel %s\n",
+		pr_err(MODULE_NAME ":writing to closed channel %8.6s\n",
 				 ch->name);
 		sdio_release_host(sdio_al_dev->card->sdio_func[0]);
 		atomic_dec(&writer_count); /* HTC */
@@ -3031,11 +3030,11 @@ int sdio_write(struct sdio_channel *ch, const void *data, int len)
 		restart_inactive_time(sdio_al_dev);
 	}
 
-	DATA_DEBUG(MODULE_NAME ":start ch %s write %d avail %d.\n",
+	DATA_DEBUG(MODULE_NAME ":start ch %8.6s write %d avail %d.\n",
 		ch->name, len, ch->write_avail);
 
 	if (len > ch->write_avail) {
-		pr_err(MODULE_NAME ":ERR ch %s: write more bytes (%d) than "
+		pr_err(MODULE_NAME ":ERR ch %8.6s: write more bytes (%d) than "
 				   " available %d.\n",
 				ch->name, len, ch->write_avail);
 		sdio_release_host(sdio_al_dev->card->sdio_func[0]);
@@ -3052,7 +3051,7 @@ int sdio_write(struct sdio_channel *ch, const void *data, int len)
 	if (ret) {
 		pr_err(MODULE_NAME ": GPIO mdm2ap_vddmin=%d\n",
 			sdio_al->pdata->get_mdm2ap_status());
-		pr_err(MODULE_NAME ":sdio_write on channel %s err=%d\n",
+		pr_err(MODULE_NAME ":sdio_write on channel %8.6s err=%d\n",
 			ch->name, -ret);
 		sdio_release_host(sdio_al_dev->card->sdio_func[0]);
 		atomic_dec(&writer_count); /* HTC */
@@ -3063,7 +3062,7 @@ int sdio_write(struct sdio_channel *ch, const void *data, int len)
 	}
 
 	ch->total_tx_bytes += len;
-	DATA_DEBUG(MODULE_NAME ":end ch %s write %d avail %d total %d.\n",
+	DATA_DEBUG(MODULE_NAME ":end ch %8.6s write %d avail %d total %d.\n",
 		ch->name, len, ch->write_avail, ch->total_tx_bytes);
 
 	/* Round up to whole buffer size */
@@ -3079,7 +3078,7 @@ int sdio_write(struct sdio_channel *ch, const void *data, int len)
 	sdio_release_host(sdio_al_dev->card->sdio_func[0]);
 
 	atomic_dec(&writer_count); /* HTC */
-	pr_debug(MODULE_NAME ": %s %s() end, writer_count %d\n",
+	pr_debug(MODULE_NAME ": %8.6s %s() end, writer_count %d\n",
 		ch->name, __func__, atomic_read(&writer_count)); /* HTC */
 	/* ++SSD_RIL: Mars_Lin@20110809: For sdio_write COMPLETION. */
 	sdio_write_end();
@@ -3163,18 +3162,18 @@ static int init_channels(struct sdio_al_device *sdio_al_dev)
 			       ch_name_size,
 			       SDIO_TEST_POSTFIX,
 			       SDIO_TEST_POSTFIX_SIZE);
-			pr_debug(MODULE_NAME ":pdev.name = %s\n",
+			pr_debug(MODULE_NAME ":pdev.name = %8.6s\n",
 				sdio_al_dev->channel[i].ch_test_name);
 			sdio_al_dev->channel[i].pdev = platform_device_alloc(
 				sdio_al_dev->channel[i].ch_test_name, -1);
 		} else {
-			pr_debug(MODULE_NAME ":pdev.name = %s\n",
+			pr_debug(MODULE_NAME ":pdev.name = %8.6s\n",
 				sdio_al_dev->channel[i].name);
 			sdio_al_dev->channel[i].pdev = platform_device_alloc(
 				sdio_al_dev->channel[i].name, -1);
 		}
 		if (!sdio_al_dev->channel[i].pdev) {
-			pr_err(MODULE_NAME ":NULL platform device for ch %s",
+			pr_err(MODULE_NAME ":NULL platform device for ch %8.6s",
 			       sdio_al_dev->channel[i].name);
 			sdio_al_dev->channel[i].is_valid = 0;
 			continue;
@@ -3587,7 +3586,7 @@ static void sdio_al_print_info(void)
 
 			ch_config = &sdio_al_dev->channel[i].ch_config;
 
-			pr_err(MODULE_NAME ": Ch %s: max_rx_thres=0x%x, "
+			pr_err(MODULE_NAME ": Ch %8.6s: max_rx_thres=0x%x, "
 				"max_tx_thres=0x%x, tx_buf=0x%x, "
 				"is_packet_mode=%d, "
 				"max_packet=0x%x, min_write=0x%x",
@@ -3600,7 +3599,7 @@ static void sdio_al_print_info(void)
 
 			if (!ch->is_open) {
 				pr_err(MODULE_NAME
-					 ": %s is VALID but NOT OPEN. "
+					 ": %8.6s is VALID but NOT OPEN. "
 					"continuing...", ch->name);
 				continue;
 			}
@@ -4065,10 +4064,10 @@ static void dbg_dump_buf(const char *name,
     }
 
 #ifdef ENABLE_DUMP_TXT_BUF
-    printk("[%10.10s][%9.9s][%4.4d][%s][%s]\n",
+    printk("[%10.10s][%8.6s][%4.4d][%s][%s]\n",
 			prestr, name, len, bin_buf, txt_buf);
 #else
-	printk("[%10.10s][%9.9s][%4.4d][%s]\n",
+	printk("[%10.10s][%8.6s][%4.4d][%s]\n",
 			prestr, name, len, bin_buf);
 #endif
 }

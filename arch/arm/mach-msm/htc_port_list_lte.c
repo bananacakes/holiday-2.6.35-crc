@@ -51,10 +51,10 @@ static ssize_t htc_show(struct device *dev,  struct device_attribute *attr,  cha
 /* report tcp/ip port info to the user space by sysfs */
 static ssize_t htcport_show(struct device *dev,  struct device_attribute *attr,  char *buf) {
 	char *s = buf;
-	struct list_head *listptr;
+	struct list_head *listptr, *nextptr;
 	struct p_list *entry;
 
-	list_for_each(listptr, &curr_port_list.list) {
+	list_for_each_safe(listptr, nextptr, &curr_port_list.list) {
 		entry = list_entry(listptr, struct p_list, list);
 		if(entry != NULL)
 		{

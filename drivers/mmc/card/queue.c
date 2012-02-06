@@ -276,7 +276,10 @@ int mmc_init_queue(struct mmc_queue *mq, struct mmc_card *card, spinlock_t *lock
 	mq->queue = blk_init_queue(mmc_request, lock);
 	if (!mq->queue)
 		return -ENOMEM;
-
+	if (mq->card->type == MMC_TYPE_MMC) {
+		/* 2011-11-09 set max_read_sectors = 1024 sectors (512KB) */
+		mq->queue->backing_dev_info.ra_pages = 512 * 1024 / PAGE_CACHE_SIZE;
+	}
 	mq->queue->queuedata = mq;
 	mq->req = NULL;
 

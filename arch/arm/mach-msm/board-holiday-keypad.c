@@ -111,6 +111,8 @@ static int holiday_reset_keys_up[] = {
 	0
 };
 */
+
+#if 0
 static struct keyreset_platform_data holiday_reset_keys_pdata = {
 	/*.keys_up = holiday_reset_keys_up,*/
 	.keys_down = {
@@ -125,13 +127,16 @@ struct platform_device holiday_reset_keys_device = {
 	.name = KEYRESET_NAME,
 	.dev.platform_data = &holiday_reset_keys_pdata,
 };
+#endif
 
 int __init holiday_init_keypad(void)
 {
 	printk(KERN_DEBUG "%s\n", __func__);
 
+#if 0
 	if (platform_device_register(&holiday_reset_keys_device))
 		printk(KERN_WARNING "%s: register reset key fail\n", __func__);
+#endif
 
 	return platform_device_register(&holiday_keypad_input_device);
 }

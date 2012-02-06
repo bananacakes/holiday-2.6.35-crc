@@ -2314,6 +2314,8 @@ dhd_prot_dump(dhd_pub_t *dhdp, struct bcmstrbuf *strbuf)
 #endif
 }
 
+#define RAISE_BK_PRIO 1
+
 void
 dhd_prot_hdrpush(dhd_pub_t *dhd, int ifidx, void *pktbuf)
 {
@@ -2336,6 +2338,10 @@ dhd_prot_hdrpush(dhd_pub_t *dhd, int ifidx, void *pktbuf)
 
 
 	h->priority = (PKTPRIO(pktbuf) & BDC_PRIORITY_MASK);
+#ifdef RAISE_BK_PRIO
+	if ((ap_fw_loaded == TRUE) && (h->priority < 3))
+		h->priority = 3;
+#endif
 	h->flags2 = 0;
 	h->dataOffset = 0;
 #endif /* BDC */

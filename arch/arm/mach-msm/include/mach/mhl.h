@@ -43,8 +43,7 @@ typedef struct
 	uint8_t regA6;
 } mhl_board_params;
 
-typedef struct
-{
+typedef struct {
 	int gpio_intr;
 	int gpio_reset;
 	int ci2ca;

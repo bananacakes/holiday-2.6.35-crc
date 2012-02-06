@@ -95,7 +95,7 @@ static void sdio_tty_work_func_dun(struct work_struct *work)
 			break;
 
 		if (!defaultEnableDUN && info->ch == 0) {
-			printk(KERN_ERR "sdio_tty_work_func_dun: info->ch null\n");
+			printk(KERN_ERR "[sdio_tty]sdio_tty_work_func_dun: info->ch null\n");
 			break;
 		}
 
@@ -133,7 +133,7 @@ static void sdio_tty_work_func_dun(struct work_struct *work)
 			tty->low_latency = 1;
 			tty_flip_buffer_push(tty);
 		} else
-			printk(KERN_ERR "sdio_tty_work_func_dun: tty_prepare_flip_string fail\n");
+			printk(KERN_ERR "[sdio_tty]sdio_tty_work_func_dun: tty_prepare_flip_string fail\n");
 	}
 
 	mutex_unlock(&sdio_tty_lock);
@@ -155,7 +155,7 @@ static void sdio_tty_work_func_ciq(struct work_struct *work)
 	struct tty_struct *tty = info->tty;
 
 	if (!tty) {
-		pr_info("[sdio_tty]sdio_tty_work_func_ciq: tty=NULL\n");
+		pr_info("[sdio_tty]sdio_tty_work_func_c: tty=NULL\n");
 		return;
 	}
 
@@ -165,13 +165,13 @@ static void sdio_tty_work_func_ciq(struct work_struct *work)
 		if (test_bit(TTY_THROTTLED, &tty->flags))
 			break;
 		if (info->ch == 0) {
-			pr_info("[sdio_tty]sdio_tty_work_func_ciq: info->ch == 0 \n");
-			printk(KERN_ERR "[sdio_tty]sdio_tty_work_func_ciq: info->ch null\n");
+			pr_info("[sdio_tty]sdio_tty_work_func_c: info->ch == 0 \n");
+			printk(KERN_ERR "[sdio_tty]sdio_tty_work_func_c: info->ch null\n");
 			break;
 		}
 
 		if (info->sdio_open == 0) {
-			pr_info("[sdio_tty]sdio_tty_work_func_ciq: info->sdio_open == 0 \n");
+			pr_info("[sdio_tty]sdio_tty_work_func_c: info->sdio_open == 0 \n");
 			return;
 		}
 
@@ -185,7 +185,7 @@ static void sdio_tty_work_func_ciq(struct work_struct *work)
 		if (avail && ptr) {
 			ret = sdio_read(info->ch, ptr, avail);
 			if (ret) {
-				pr_info("[sdio_tty]sdio_tty_work_func_ciq: read 0 bytes from sdio_driver \n");
+				pr_info("[sdio_tty]sdio_tty_work_func_c: read 0 bytes from sdio_driver \n");
 				break;
 			}
 			/*++SSD_RIL:Mars@20110830: remove un-useful garbage characters in log file.*/
@@ -196,7 +196,7 @@ static void sdio_tty_work_func_ciq(struct work_struct *work)
 			tty->low_latency = 1;
 			tty_flip_buffer_push(tty);
 		} else
-			printk(KERN_ERR "[sdio_tty]sdio_tty_work_func_ciq: tty_prepare_flip_string fail\n");
+			printk(KERN_ERR "[sdio_tty]sdio_tty_work_func_c: tty_prepare_flip_string fail\n");
 	}
 
 	mutex_unlock(&sdio_tty_lock);
@@ -230,6 +230,7 @@ static int sdio_tty_open(struct tty_struct *tty, struct file *f)
 //--SSD_RIL
 	struct sdio_tty_info *info;
 	const char *name;
+	char wake_lock_name[10];
 
 	if (n == SDIO_TTY_INDEX_DUN) {
 		name = SDIO_TTY_NAME_DUN;
@@ -257,7 +258,9 @@ static int sdio_tty_open(struct tty_struct *tty, struct file *f)
 	if (info->sdio_open == 0) {
 		info->tty_open_count ++;
 	//--HTC_CSP:Since the limitation of sdio_al(The channel can be opened once), we will keep the channel info if it's ever opened
-		wake_lock_init(&info->wake_lock, WAKE_LOCK_SUSPEND, name);
+		strncpy(wake_lock_name, name, 6); //SDIO_XX
+		wake_lock_name[6] = '\0';
+		wake_lock_init(&info->wake_lock, WAKE_LOCK_SUSPEND, wake_lock_name);
 		//++HTC_CSP: move the tty assignment to out side
 		//info->tty = tty;
 		//--HTC_CSP: move the tty assignment to out side
@@ -284,10 +287,10 @@ static int sdio_tty_open(struct tty_struct *tty, struct file *f)
 
 			if (res != 0) {
 				info->sdio_open = 0;
-				pr_info("[sdio_tty]sdio_tty_open: sdio_open FAIL, channel name %s error code: %d\n", name, res);
+				pr_info("[sdio_tty]sdio_tty_open: sdio_open FAIL, channel name %8.6s error code: %d\n", name, res);
 			} else {
 				info->sdio_open = 1;
-				pr_info("[sdio_tty]sdio_tty_open: sdio_open SUCCESS, channel name %s\n", name);
+				pr_info("[sdio_tty]sdio_tty_open: sdio_open SUCCESS, channel name %8.6s\n", name);
 //++SSD_RIL: Mars@20110614: since we only can call sdio_open once, so we save the open status in a gobal paramters.
 				sdio_open_flag	 |= nOpenFlag;//set the open status to 1
 //--SSD_RIL
@@ -318,7 +321,7 @@ static void sdio_tty_close(struct tty_struct *tty, struct file *f)
 	}
 
 	if(info->ch != 0)
-		pr_info("[sdio_tty]sdio_tty_close: info->ch->name=[%s]\n", info->ch->name);
+		pr_info("[sdio_tty]sdio_tty_close: info->ch->name=[%8.6s]\n", info->ch->name);
 
 	/* wait for the work in workqueue to complete */
 	flush_work(&info->tty_work);
@@ -437,10 +440,10 @@ int open_sdio_dun(void* param) {
 		g_DUN_res_code = res;
 //--SSD_RIL
 		if (res != 0) {
-			pr_info("[sdio_tty]open_sdio_dun: sdio_open FAIL, channel name %s error code: %d\n", name, res);
+			pr_info("[sdio_tty]open_sdio_dun: sdio_open FAIL, channel name %8.6s error code: %d\n", name, res);
 			msleep(2000);
 		} else {
-			pr_info("[sdio_tty]open_sdio_dun: sdio_open SUCCESS, channel name %s\n", name);
+			pr_info("[sdio_tty]open_sdio_dun: sdio_open SUCCESS, channel name %8.6s\n", name);
 			opened = true;
 			g_IsDUNOpened = true;
 		}

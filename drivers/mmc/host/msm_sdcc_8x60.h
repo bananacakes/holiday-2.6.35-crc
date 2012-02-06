@@ -166,7 +166,7 @@
 
 #define MCI_FIFOHALFSIZE (MCI_FIFOSIZE / 2)
 
-#define NR_SG		32
+#define NR_SG		128
 
 #define MSM_MMC_IDLE_TIMEOUT	250 /* msecs */
 #define MSM_EMMC_IDLE_TIMEOUT	20 /* msecs */
@@ -283,6 +283,7 @@ struct msmsdcc_host {
 
 	unsigned int sdcc_irq_disabled;
 	struct timer_list req_tout_timer;
+	unsigned long reg_write_delay;
 	bool irq_wake_enabled;
 	unsigned int	use_pio;
 	unsigned int	irq_status[5];
