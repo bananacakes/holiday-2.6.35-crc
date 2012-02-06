@@ -3161,6 +3161,7 @@ void dhd_detach(dhd_pub_t *dhdp)
 		{
 			dhd_stop(ifp->net);
 			unregister_netdev(ifp->net);
+			free_netdev(ifp->net);
 			MFREE(dhd->pub.osh, ifp, sizeof(*ifp));
 
 	}

@@ -468,7 +468,7 @@ static void usb_chg_detect(struct work_struct *w)
 	 * */
 	if (temp == USB_CHG_TYPE__WALLCHARGER)
 		pm_runtime_put_sync(&ui->pdev->dev);
-	USB_INFO("%s: USBCMD_RS = %d\n", __func__, (readl(USB_USBCMD) | USBCMD_RS));
+	USB_INFO("%s: USBCMD_RS = %d\n", __func__, (readl(USB_USBCMD) & USBCMD_RS));
 }
 
 static int usb_ep_get_stall(struct msm_endpoint *ept)
@@ -1397,6 +1397,10 @@ static irqreturn_t usb_interrupt(int irq, void *data)
 	if (n & STS_SLI) {
 		USB_INFO("suspend\n");
 
+		/* We should not handle suspend after cable removed */
+		if (!is_usb_online(ui))
+			return IRQ_HANDLED;
+
 		spin_lock_irqsave(&ui->lock, flags);
 		ui->usb_state = USB_STATE_SUSPENDED;
 		ui->flags = USB_FLAG_SUSPEND;
@@ -2321,10 +2325,19 @@ static void chg_stat_do_off_work(struct work_struct *w)
 
 static void charger_detect(struct usb_info *ui)
 {
+	struct msm_otg *otg = to_msm_otg(ui->xceiv);
+	enum chg_type chg_type = USB_CHG_TYPE__INVALID;
+	unsigned long flags;
 	msleep(10);
 
 	/* detect shorted D+/D-, indicating AC power */
-	if ((readl(USB_PORTSC) & PORTSC_LS) != PORTSC_LS) {
+	spin_lock_irqsave(&ui->lock, flags);
+	chg_type = usb_get_chg_type(ui);
+	spin_unlock_irqrestore(&ui->lock, flags);
+
+	atomic_set(&otg->chg_type, chg_type);
+
+	if (chg_type != USB_CHG_TYPE__WALLCHARGER) {
 		if (ui->connect_type == CONNECT_TYPE_USB) {
 			USB_INFO("USB charger is already detected\n");
 			return;
@@ -2340,14 +2353,20 @@ static void charger_detect(struct usb_info *ui)
 		msleep(10);
 		if (ui->change_phy_voltage)
 			ui->change_phy_voltage(0);
+
+		/* charging current is not controlled by USB. just set 0 here */
+		otg_set_power(ui->xceiv, 0);
+		pm_runtime_put_sync(&ui->pdev->dev);
 	}
 	queue_work(ui->usb_wq, &ui->notifier_work);
-	queue_delayed_work_on(0, ui->usb_wq, &ui->chg_det, DELAY_FOR_CHECK_CHG);
 }
 
 static void charger_detect_by_9v_gpio(struct usb_info *ui)
 {
 	int ac_9v_charger = 0;
+	struct msm_otg *otg = to_msm_otg(ui->xceiv);
+	enum chg_type chg_type = USB_CHG_TYPE__INVALID;
+	unsigned long flags;
 
 	msleep(10);
 	if (ui->configure_ac_9v_gpio)
@@ -2357,14 +2376,25 @@ static void charger_detect_by_9v_gpio(struct usb_info *ui)
 	if (ui->configure_ac_9v_gpio)
 		ui->configure_ac_9v_gpio(0);
 
+	/* detect shorted D+/D-, indicating AC power */
+	spin_lock_irqsave(&ui->lock, flags);
+	chg_type = usb_get_chg_type(ui);
+	spin_unlock_irqrestore(&ui->lock, flags);
+
+	atomic_set(&otg->chg_type, chg_type);
+
 	if (ac_9v_charger) {
 		USB_INFO("9V AC charger\n");
 		ui->connect_type = CONNECT_TYPE_9V_AC;
 		/* a delayed work to check charger */
 		chg_stat_detect_enable(1);
-	} else if ((readl(USB_PORTSC) & PORTSC_LS) == PORTSC_LS) {
+	} else if (chg_type == USB_CHG_TYPE__WALLCHARGER) {
 		USB_INFO("AC charger\n");
 		ui->connect_type = CONNECT_TYPE_AC;
+
+		/* charging current is not controlled by USB. just set 0 here */
+		otg_set_power(ui->xceiv, 0);
+		pm_runtime_put_sync(&ui->pdev->dev);
 	} else if (ui->connect_type == CONNECT_TYPE_USB) {
 		USB_INFO("USB charger is already detected\n");
 		return;
@@ -3404,6 +3434,9 @@ static struct t_mhl_status_notifier mhl_status_notifier = {
 static void ac_detect_expired(unsigned long _data)
 {
 	struct usb_info *ui = (struct usb_info *) _data;
+	struct msm_otg *otg = to_msm_otg(ui->xceiv);
+	enum chg_type chg_type = USB_CHG_TYPE__INVALID;
+	unsigned long flags;
 	u32 delay = 0;
 
 	USB_INFO("%s: count = %d, connect_type = %d\n", __func__,
@@ -3413,7 +3446,13 @@ static void ac_detect_expired(unsigned long _data)
 		return;
 
 	/* detect shorted D+/D-, indicating AC power */
-	if ((readl(USB_PORTSC) & PORTSC_LS) != PORTSC_LS) {
+	spin_lock_irqsave(&ui->lock, flags);
+	chg_type = usb_get_chg_type(ui);
+	spin_unlock_irqrestore(&ui->lock, flags);
+
+	atomic_set(&otg->chg_type, chg_type);
+
+	if (chg_type != USB_CHG_TYPE__WALLCHARGER) {
 
 		/* Some carkit can't be recognized as AC mode.
 		 * Add SW solution here to notify battery driver should
@@ -3441,6 +3480,10 @@ static void ac_detect_expired(unsigned long _data)
 		USB_INFO("AC charger\n");
 		ui->connect_type = CONNECT_TYPE_AC;
 		queue_work(ui->usb_wq, &ui->notifier_work);
+
+		/* charging current is not controlled by USB. just set 0 here */
+		otg_set_power(ui->xceiv, 0);
+		pm_runtime_put_sync(&ui->pdev->dev);
 	}
 }
 

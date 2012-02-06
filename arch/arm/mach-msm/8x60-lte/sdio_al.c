@@ -764,6 +764,7 @@ static int write_lpm_info(struct sdio_al_device *sdio_al_dev)
 		offsetof(struct peer_sdioc_channel_config, is_host_ok_to_sleep);
 	int ret;
 	static struct memc_counter memc = { caller: __func__ }; /* HTC */
+	int retry = 3;
 
 	if (sdio_al_dev->lpm_chan == INVALID_SDIO_CHAN) {
 		pr_err(MODULE_NAME ":Invalid lpm_chan for card %d\n",
@@ -777,6 +778,15 @@ static int write_lpm_info(struct sdio_al_device *sdio_al_dev)
 
 	ret = sdio_al_memcpy_toio_wrapper(lpm_func, SDIOC_SW_MAILBOX_ADDR+offset,
 				&sdio_al_dev->is_ok_to_sleep, sizeof(u32), &memc);
+	/* HTC: retry to clear okts if error occurred in sdcc layer */
+	while (ret && !sdio_al_dev->is_ok_to_sleep &&
+		(sdio_al_dev->state == CARD_INSERTED) && retry) {
+		pr_err(MODULE_NAME ":failed to clear okts for card %d, ret %d, retry %d\n",
+			sdio_al_dev->card->host->index, ret, retry);
+		retry--;
+		ret = sdio_al_memcpy_toio_wrapper(lpm_func, SDIOC_SW_MAILBOX_ADDR+offset,
+				&sdio_al_dev->is_ok_to_sleep, sizeof(u32), &memc);
+	}
 	if (ret) {
 		pr_err(MODULE_NAME ":failed to write lpm info for card %d\n",
 				   sdio_al_dev->card->host->index);

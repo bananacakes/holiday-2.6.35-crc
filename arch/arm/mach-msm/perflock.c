@@ -44,6 +44,7 @@ static DEFINE_SPINLOCK(policy_update_lock);
 static int initialized;
 static unsigned int *perf_acpu_table;
 static unsigned int table_size;
+static struct workqueue_struct *perflock_workqueue;
 
 
 #ifdef CONFIG_PERF_LOCK_DEBUG
@@ -442,8 +443,9 @@ void perf_unlock(struct perf_lock *lock)
 	spin_unlock_irqrestore(&list_lock, irqflags);
 
 	/* Prevent lock/unlock quickly, add a timeout to release perf_lock */
-	schedule_delayed_work(&work_expire_perf_locks,
+	queue_delayed_work(perflock_workqueue, &work_expire_perf_locks,
 			PERF_UNLOCK_DELAY);
+
 }
 EXPORT_SYMBOL(perf_unlock);
 
@@ -521,6 +523,7 @@ void __init perflock_init(struct perflock_platform_data *pdata)
 
 	perf_acpu_table_fixup();
 	cpufreq_register_notifier(&perflock_notifier, CPUFREQ_POLICY_NOTIFIER);
+	perflock_workqueue = create_singlethread_workqueue("perflock_wq");
 
 	initialized = 1;
 

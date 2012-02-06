@@ -643,7 +643,7 @@ int htc_battery_core_update_changed(void)
 	mutex_unlock(&battery_core_info.info_lock);
 
 	BATT_LOG("ID=%d, level=%d, vol=%d, temp=%d, curr=%d, "
-		"dis_curr=%d, chg_src=%d, chg_en=%d, over_vchg=%d, batt_state=%d",
+		"dis_curr=%d, chg_src=%d, chg_en=%d, over_vchg=%d, batt_state=%d, over_loading=%d, charge_full=%d",
 			battery_core_info.rep.batt_id,
 			battery_core_info.rep.level,
 			battery_core_info.rep.batt_vol,
@@ -653,7 +653,10 @@ int htc_battery_core_update_changed(void)
 			battery_core_info.rep.charging_source,
 			battery_core_info.rep.charging_enabled,
 			battery_core_info.rep.over_vchg,
-			battery_core_info.rep.batt_state);
+			battery_core_info.rep.batt_state,
+			battery_over_loading,
+			battery_core_info.htc_charge_full
+			);
 
 	/* send uevent if need */
 	if (is_send_batt_uevent) {

@@ -648,6 +648,8 @@ int __init board_mfg_mode_init(char *s)
 		mfg_mode = 5;
 	else if (!strcmp(s, "mfgkernel:diag58"))
 		mfg_mode = 6;
+	else if (!strcmp(s, "gift_mode"))
+		mfg_mode = 7;
 
 #if defined(CONFIG_ARCH_MSM8X60_LTE)
 	mdm_check_bootmode_init(s);

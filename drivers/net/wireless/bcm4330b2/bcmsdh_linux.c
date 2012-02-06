@@ -305,6 +305,10 @@ int bcmsdh_remove(struct device *dev)
 
 #if !defined(BCMLXSDMMC) || defined(OOB_INTR_ONLY)
 	dev_set_drvdata(dev, NULL);
+	if (dev && dev->p) {
+		kfree(dev->p);
+		dev->p = NULL;
+	}
 #endif /* !defined(BCMLXSDMMC) || defined(OOB_INTR_ONLY) */
 
 	return 0;
@@ -673,14 +677,6 @@ void bcmsdh_unregister_oob_intr(void)
 		free_irq(sdhcinfo->oob_irq, NULL);
 		sdhcinfo->oob_irq_registered = FALSE;
 	}
-
-//HTC_CSP_START
-	// free device private data
-	if (sdhcinfo->dev && sdhcinfo->dev->p) {
-		kfree(sdhcinfo->dev->p);
-		sdhcinfo->dev->p = NULL;
-	}
-//HTC_CSP_END
 }
 #endif /* defined(OOB_INTR_ONLY) */
 /* Module parameters specific to each host-controller driver */

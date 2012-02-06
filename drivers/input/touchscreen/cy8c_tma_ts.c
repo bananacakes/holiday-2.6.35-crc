@@ -608,10 +608,10 @@ static int cy8c_reset_baseline(void)
 	if ((data[0] & 0x01) == 0) {
 		i2c_cy8c_write_byte_data(ts_data->client, 0x1B,
 		(data[0] | 0x01));
-		printk(KERN_INFO "cy8c reset baseline\n");
+		printk(KERN_INFO "[TOUCH] cy8c reset baseline\n");
 		return 0;
 	} else {
-		printk(KERN_INFO "cy8c reset baseline bypass\n");
+		printk(KERN_INFO "[TOUCH] cy8c reset baseline bypass\n");
 		return 1;
 	}
 }
@@ -646,7 +646,10 @@ static void cy8c_ts_work_func(struct work_struct *work)
 			printk(KERN_ERR "TOUCH_ERR: %s init failed\n",
 			__func__);
 	}
-	if ((buf[2] & 0x0F) >= 1 && !(buf[2] & 0x10)) {
+
+	if (buf[2] & 0x10)
+		printk(KERN_INFO "[TOUCH] cy8c large object detected\n");
+	if ((buf[2] & 0x0F) >= 1) {
 		int base = 0x03;
 		int report = -1;
 		uint16_t finger_data[4][3];

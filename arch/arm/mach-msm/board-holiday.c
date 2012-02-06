@@ -2640,7 +2640,7 @@ static struct pm8058_led_config pm_led_config_white_sku[] = {
 		.duites_size = 8,
 		.duty_time_ms = 32,
 		.lut_flag = PM_PWM_LUT_RAMP_UP | PM_PWM_LUT_PAUSE_HI_EN,
-		.out_current = 8,
+		.out_current = 2,
 	},
 
 };
@@ -5731,7 +5731,9 @@ static void __init holiday_init(void)
 #endif
 
 #ifdef CONFIG_USB_ANDROID
-	holiday_add_usb_devices();
+	/* not load usb driver in gift_mode mode*/
+	if (board_mfg_mode() != 7)
+		holiday_add_usb_devices();
 #endif
 	msm_pm_set_platform_data(msm_pm_data, ARRAY_SIZE(msm_pm_data));
 	msm_cpuidle_set_states(msm_cstates, ARRAY_SIZE(msm_cstates),

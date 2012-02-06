@@ -652,6 +652,11 @@ static int mipi_dsi_off(struct platform_device *pdev)
         wmb();
 #endif
 
+
+	/* DSI soft reset */
+	mipi_dsi_sw_reset();
+	mipi_dsi_reset_set(0);
+
 	/* DSIPHY_PLL_CTRL_5 */
 	MIPI_OUTP(MIPI_DSI_BASE + 0x0214, 0x05f);
 
@@ -691,12 +696,6 @@ static int mipi_dsi_off(struct platform_device *pdev)
 	clk_disable(dsi_m_pclk);
 	clk_disable(dsi_s_pclk);
 	clk_disable(amp_pclk); /* clock for AHB-master to AXI */
-
-	if (mipi_dsi_reset_read() == 1) {
-		/* DSI soft reset */
-		mipi_dsi_sw_reset();
-		mipi_dsi_reset_set(0);
-	}
 
 	dsi_mutex_unlock();
 

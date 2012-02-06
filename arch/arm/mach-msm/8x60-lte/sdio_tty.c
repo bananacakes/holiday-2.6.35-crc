@@ -169,6 +169,12 @@ static void sdio_tty_work_func_ciq(struct work_struct *work)
 			printk(KERN_ERR "[sdio_tty]sdio_tty_work_func_ciq: info->ch null\n");
 			break;
 		}
+
+		if (info->sdio_open == 0) {
+			pr_info("[sdio_tty]sdio_tty_work_func_ciq: info->sdio_open == 0 \n");
+			return;
+		}
+
 		avail = sdio_read_avail(info->ch);
 		if (avail == 0) {
 			break;

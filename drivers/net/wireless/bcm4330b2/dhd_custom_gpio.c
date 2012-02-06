@@ -192,6 +192,10 @@ dhd_custom_get_mac_address(unsigned char *buf)
 const struct cntry_locales_custom translate_custom_table[] = {
 /* Table should be filled out based on custom platform regulatory requirement */
 #ifdef EXAMPLE_TABLE
+#if 1
+	{"KR", "XY", 00}
+#else
+
 	{"US", "US", 69}, /* input ISO "US" to : US regrev 69 */
 	{"CA", "US", 69}, /* input ISO "CA" to : US regrev 69 */
 	{"EU", "EU", 05}, /* input ISO "CA" to : US regrev 69 */
@@ -204,6 +208,7 @@ const struct cntry_locales_custom translate_custom_table[] = {
 	{"CN", "XY", 03}, /* input ISO "CN" to : XY regrev 03 */
 	{"TW", "XY", 03},
 	{"AR", "XY", 03}
+#endif
 #endif /* EXMAPLE_TABLE */
 };
 

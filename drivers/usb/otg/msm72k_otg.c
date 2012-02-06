@@ -145,6 +145,7 @@ static int ulpi_write(struct msm_otg *dev, unsigned val, unsigned reg)
 }
 
 #ifdef CONFIG_USB_EHCI_MSM
+#ifdef CONFIG_OTG_HOST
 static void enable_idgnd(struct msm_otg *dev)
 {
 	/* Do nothing if instead of ID pin, USER controls mode switch */
@@ -156,7 +157,7 @@ static void enable_idgnd(struct msm_otg *dev)
 	mdelay(100);
 	writel(readl(USB_OTGSC) | OTGSC_IDIE, USB_OTGSC);
 }
-
+#endif
 static void disable_idgnd(struct msm_otg *dev)
 {
 	/* Do nothing if instead of ID pin, USER controls mode switch */
@@ -721,7 +722,7 @@ static int msm_otg_suspend(struct msm_otg *dev)
 		}
 	}
 
-	writel(readl(USB_USBCMD) | ASYNC_INTR_CTRL | ULPI_STP_CTRL, USB_USBCMD);
+	writel(readl(USB_USBCMD) /*| ASYNC_INTR_CTRL*/ | ULPI_STP_CTRL, USB_USBCMD);
 	/* Ensure that above operation is completed before turning off clocks */
 	dsb();
 
@@ -807,7 +808,6 @@ static int msm_otg_resume(struct msm_otg *dev)
 		clk_enable(dev->hs_cclk);
 
 	temp = readl(USB_USBCMD);
-	temp &= ~ASYNC_INTR_CTRL;
 	temp &= ~ULPI_STP_CTRL;
 	writel(temp, USB_USBCMD);
 
@@ -1555,7 +1555,7 @@ reset_link:
 	}
 #endif
 
-#ifdef CONFIG_USB_EHCI_MSM
+#if defined(CONFIG_USB_EHCI_MSM) && defined(CONFIG_OTG_HOST)
 	if (dev->otg.host && !dev->pmic_id_notif_supp) {
 		enable_idgnd(dev);
 
@@ -1840,6 +1840,8 @@ static void msm_otg_sm_work(struct work_struct *w)
 #endif
 			/* Workaround: Reset PHY in SE1 state */
 			USBH_DEBUG("entering into lpm with wall-charger\n");
+
+			otg_reset(&dev->otg, 1);
 			msm_otg_put_suspend(dev);
 			/* Allow idle power collapse */
 			otg_pm_qos_update_latency(dev, 0);
