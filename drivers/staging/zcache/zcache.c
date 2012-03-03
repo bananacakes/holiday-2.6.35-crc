@@ -1369,6 +1369,8 @@ static void zcache_cleancache_put_page(int pool_id,
 	u32 ind = (u32) index;
 	struct tmem_oid oid = *(struct tmem_oid *)&key;
 
+	if (!PageWasActive(page))
+		return;
 	if (likely(ind == index))
 		(void)zcache_put_page(pool_id, &oid, index, page);
 }
@@ -1383,6 +1385,8 @@ static int zcache_cleancache_get_page(int pool_id,
 
 	if (likely(ind == index))
 		ret = zcache_get_page(pool_id, &oid, index, page);
+	if (ret == 0)
+		SetPageWasActive(page);
 	return ret;
 }
 
