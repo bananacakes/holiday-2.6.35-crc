@@ -744,12 +744,12 @@ static ssize_t store_vdd_levels(struct kobject *a, struct attribute *b, const ch
 #endif	/* CONFIG_CPU_VOLTAGE_TABLE */
 
 cpufreq_freq_attr_ro_perm(cpuinfo_cur_freq, 0400);
-cpufreq_freq_attr_ro_perm(cpuinfo_min_freq, 0444);
-cpufreq_freq_attr_ro_perm(cpuinfo_max_freq, 0444);
+cpufreq_freq_attr_ro(cpuinfo_min_freq);
+cpufreq_freq_attr_ro(cpuinfo_max_freq);
 cpufreq_freq_attr_ro(cpuinfo_transition_latency);
-cpufreq_freq_attr_ro_perm(scaling_available_governors, 0444);
+cpufreq_freq_attr_ro(scaling_available_governors);
 cpufreq_freq_attr_ro(scaling_driver);
-cpufreq_freq_attr_ro_perm(scaling_cur_freq, 0444);
+cpufreq_freq_attr_ro(scaling_cur_freq);
 cpufreq_freq_attr_ro(bios_limit);
 cpufreq_freq_attr_ro(related_cpus);
 cpufreq_freq_attr_ro(affected_cpus);
@@ -2141,7 +2141,10 @@ EXPORT_SYMBOL_GPL(cpufreq_unregister_driver);
 
 static int __init cpufreq_core_init(void)
 {
-	int cpu, rc;
+	int cpu;
+#ifdef CONFIG_CPU_VOLTAGE_TABLE
+	int rc;
+#endif	/* CONFIG_CPU_VOLTAGE_TABLE */
 
 	for_each_possible_cpu(cpu) {
 		per_cpu(cpufreq_policy_cpu, cpu) = -1;

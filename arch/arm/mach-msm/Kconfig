@@ -50,33 +50,6 @@ config ARCH_MSM8X60
 	select MSM_BUS_SCALING
 	select MSM_SECURE_IO
 	select MSM_SCHED_FAST_CPU_ONLINE
-	select ARCH_INLINE_SPIN_TRYLOCK
-	select ARCH_INLINE_SPIN_TRYLOCK_BH
-	select ARCH_INLINE_SPIN_LOCK
-	select ARCH_INLINE_SPIN_LOCK_BH
-	select ARCH_INLINE_SPIN_LOCK_IRQ
-	select ARCH_INLINE_SPIN_LOCK_IRQSAVE
-	select ARCH_INLINE_SPIN_UNLOCK
-	select ARCH_INLINE_SPIN_UNLOCK_BH
-	select ARCH_INLINE_SPIN_UNLOCK_IRQ
-	select ARCH_INLINE_SPIN_UNLOCK_IRQRESTORE
-	select ARCH_INLINE_READ_TRYLOCK
-	select ARCH_INLINE_READ_LOCK
-	select ARCH_INLINE_READ_LOCK_BH
-	select ARCH_INLINE_READ_LOCK_IRQ
-	select ARCH_INLINE_READ_LOCK_IRQSAVE
-	select ARCH_INLINE_READ_UNLOCK
-	select ARCH_INLINE_READ_UNLOCK_BH
-	select ARCH_INLINE_READ_UNLOCK_IRQ
-	select ARCH_INLINE_READ_UNLOCK_IRQRESTORE
-	select ARCH_INLINE_WRITE_TRYLOCK
-	select ARCH_INLINE_WRITE_LOCK
-	select ARCH_INLINE_WRITE_LOCK_BH
-	select ARCH_INLINE_WRITE_LOCK_IRQ
-	select ARCH_INLINE_WRITE_LOCK_IRQSAVE
-	select ARCH_INLINE_WRITE_UNLOCK
-	select ARCH_INLINE_WRITE_UNLOCK_BH
-	select ARCH_INLINE_WRITE_UNLOCK_IRQRESTORE
 
 config ARCH_MSM8X60_LTE
 	bool "MSM8X60_LTE"
@@ -392,13 +365,6 @@ config MACH_SUPERSONIC
 	help
 	  Select this to support the Supersonic device
 
-config MACH_OBOEA
-	depends on ARCH_QSD8X50
-	default n
-	bool "Oboea"
-	help
-	  Select this to support the Oboea device
-
 config MACH_BEE
 	depends on ARCH_MSM7225
 	default n
@@ -498,14 +464,6 @@ config MACH_LEXIKON
        bool "MSM7x30 LEXIKON"
        help
          Support for the Qualcomm MSM7x30 Lexikon board.
-
-config MACH_LEXIKONCT
-       depends on ARCH_MSM7X30
-       depends on !MSM_STACKED_MEMORY
-       default n
-       bool "MSM7x30 LEXIKONCT"
-       help
-         Support for the Qualcomm MSM7x30 LexikonCT board.
 
 config MACH_SPEEDY
        depends on ARCH_MSM7X30
@@ -653,30 +611,6 @@ config MACH_TAGH
        help
          Support for the Qualcomm MSM7x30 Tag_h board.
 
-config MACH_BLISS
-       depends on ARCH_MSM7X30
-       depends on !MSM_STACKED_MEMORY
-       default n
-       bool "MSM7x30 BLISS"
-       help
-         Support for the Qualcomm MSM7x30 Bliss board.
-
-config MACH_BLISSC
-       depends on ARCH_MSM7X30
-       depends on !MSM_STACKED_MEMORY
-       default n
-       bool "MSM7x30 BLISSC"
-       help
-         Support for the Qualcomm MSM7x30 Blissc board.
-
-config MACH_RUNNYMEDE
-       depends on ARCH_MSM7X30
-       depends on !MSM_STACKED_MEMORY
-       default n
-       bool "MSM7x30 RUNNYMEDE"
-       help
-         Support for the Qualcomm MSM7x30 Runnymede board.
-
 config MACH_PYRAMID
 		depends on ARCH_MSM8X60
 		default n
@@ -700,22 +634,6 @@ config MACH_SHOOTER
         select SMP_PARALLEL_START
         help
           Support for the Shooter device.
-
-config MACH_SHOOTER_CT
-        depends on ARCH_MSM8X60
-        default n
-        bool "Shooter_CT"
-        select SMP_PARALLEL_START
-        help
-          Support for the Shooter_CT device.
-
-config MACH_SHOOTER_K
-        depends on ARCH_MSM8X60
-        default n
-        bool "Shooter_K"
-        select SMP_PARALLEL_START
-        help
-          Support for the Shooter_K device.
 
 config MACH_RIDER
         depends on ARCH_MSM8X60
@@ -1425,11 +1343,13 @@ config CPU_VOLTAGE_TABLE
 	bool "Enable CPU Voltage Table via sysfs for adjustements"
 	default n
 
-config NUTTER_MODE
-	bool "Enable Overclocking above 1536MHz"
+config BOOST_L2_BANDWIDTH
+	bool "Boost L2 Bandwidth"
 	default n
-	help
-	  Enabling this option will allow OC up to 1998MHz.
+
+config SYNC_L2_CACHE_FREQ
+	bool "Synchronous L2 Cache Operations (Max 1.566 GHz)"
+	default n
 
 if CPU_FREQ_MSM
 
