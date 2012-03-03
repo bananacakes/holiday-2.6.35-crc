@@ -31,6 +31,9 @@ int au_test_loopback_overlap(struct super_block *sb, struct dentry *h_adding)
 	struct super_block *h_sb;
 	struct loop_device *l;
 
+  /* Puppy Linux hack to allow Squashfs file systems to be used as Aufs branches */
+  return 0;
+
 	h_sb = h_adding->d_sb;
 	if (MAJOR(h_sb->s_dev) != LOOP_MAJOR)
 		return 0;
