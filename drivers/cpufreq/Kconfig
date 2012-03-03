@@ -111,6 +111,19 @@ config CPU_FREQ_DEFAULT_GOV_CONSERVATIVE
 	  governor. If unsure have a look at the help section of the
 	  driver. Fallback governor will be the performance governor.
 
+
+config CPU_FREQ_DEFAULT_GOV_LAGFREE
+        bool "lagfree"
+        select CPU_FREQ_GOV_LAGFREE
+        select CPU_FREQ_GOV_PERFORMANCE
+        help
+          Use the CPUFreq governor 'lagfree' as default. This allows
+          you to get a full dynamic frequency capable system by simply
+          loading your cpufreq low-level hardware driver.
+          Be aware that not all cpufreq drivers support the lagfree
+          governor. If unsure have a look at the help section of the
+          driver. Fallback governor will be the performance governor.
+
 config CPU_FREQ_DEFAULT_GOV_INTERACTIVE
 	bool "interactive"
 	select CPU_FREQ_GOV_INTERACTIVE
@@ -132,18 +145,6 @@ config CPU_FREQ_DEFAULT_GOV_INTELLIDEMAND
 	select CPU_FREQ_GOV_PERFORMANCE
 	help
 	  Intelligent OnDemand Govneror based on Samsung Patched OnDemand
-
-config CPU_FREQ_DEFAULT_GOV_LAGFREE
-        bool "lagfree"
-        select CPU_FREQ_GOV_LAGFREE
-        select CPU_FREQ_GOV_PERFORMANCE
-        help
-          Use the CPUFreq governor 'lagfree' as default. This allows
-          you to get a full dynamic frequency capable system by simply
-          loading your cpufreq low-level hardware driver.
-          Be aware that not all cpufreq drivers support the lagfree
-          governor. If unsure have a look at the help section of the
-          driver. Fallback governor will be the performance governor.
 
 endchoice
 
@@ -266,12 +267,47 @@ config CPU_FREQ_GOV_LAGFREE
           environment.  The frequency is gracefully increased and decreased
           rather than jumping to 100% when speed is required.
 
-          To compile this driver as a module, choose M here: the
-          module will be called cpufreq_lagfree.
+config LAGFREE_MAX_LOAD
+	int "Max CPU Load"
+	default 50
+	depends on CPU_FREQ_GOV_LAGFREE
+	help
+	  CPU freq will be increased if measured load > max_cpu_load;
 
-          For details, take a look at linux/Documentation/cpu-freq.
+config LAGFREE_MIN_LOAD
+	int "Min CPU Load"
+	default 15
+	depends on CPU_FREQ_GOV_LAGFREE
+	help
+	  CPU freq will be decrease if measured load < min_cpu_load;
 
-          If in doubt, say N.
+config LAGFREE_FREQ_STEP_DOWN
+	int "Frequency Step Down"
+	default 108000
+	depends on CPU_FREQ_GOV_LAGFREE
+	help
+	  Max freqeuncy delta when ramping down.
+
+config LAGFREE_FREQ_SLEEP_MAX
+	int "Max Sleep frequeny"
+	default 384000
+	depends on CPU_FREQ_GOV_LAGFREE
+	help
+	  Max freqeuncy for screen off.
+
+config LAGFREE_FREQ_AWAKE_MIN
+	int "Min Awake frequeny"
+	default 384000
+	depends on CPU_FREQ_GOV_LAGFREE
+	help
+	  Min freqeuncy for screen on.
+
+config LAGFREE_FREQ_STEP_UP_SLEEP_PERCENT
+	int "Freq step up percent sleep"
+	default 20
+	depends on CPU_FREQ_GOV_LAGFREE
+	help
+	  Frequency percent to step up while screen off.
 
 config CPU_FREQ_MIN_TICKS
 	int "Ticks between governor polling interval."

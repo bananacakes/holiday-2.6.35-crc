@@ -35,12 +35,12 @@
  * It helps to keep variable names smaller, simpler
  */
 
-#define DEF_FREQUENCY_UP_THRESHOLD			(50)
-#define DEF_FREQUENCY_DOWN_THRESHOLD		(15)
-#define FREQ_STEP_DOWN 						(160000)
-#define FREQ_SLEEP_MAX 						(320000)
-#define FREQ_AWAKE_MIN 						(480000)
-#define FREQ_STEP_UP_SLEEP_PERCENT 			(20)
+#define DEF_FREQUENCY_UP_THRESHOLD			CONFIG_LAGFREE_MAX_LOAD
+#define DEF_FREQUENCY_DOWN_THRESHOLD		CONFIG_LAGFREE_MIN_LOAD
+#define FREQ_STEP_DOWN 						CONFIG_LAGFREE_FREQ_STEP_DOWN
+#define FREQ_SLEEP_MAX 						CONFIG_LAGFREE_FREQ_SLEEP_MAX
+#define FREQ_AWAKE_MIN 						CONFIG_LAGFREE_FREQ_AWAKE_MIN
+#define FREQ_STEP_UP_SLEEP_PERCENT 			CONFIG_LAGFREE_FREQ_STEP_UP_SLEEP_PERCENT
 
 /*
  * The polling frequency of this governor depends on the capability of
@@ -96,7 +96,10 @@ struct dbs_tuners {
 	unsigned int up_threshold;
 	unsigned int down_threshold;
 	unsigned int ignore_nice;
-	//unsigned int freq_step;
+	unsigned int freq_step_down;
+	unsigned int freq_sleep_max;
+	unsigned int freq_awake_min;
+	unsigned int freq_step_up_sleep_percent;
 };
 
 static struct dbs_tuners dbs_tuners_ins = {
@@ -104,7 +107,10 @@ static struct dbs_tuners dbs_tuners_ins = {
 	.down_threshold = DEF_FREQUENCY_DOWN_THRESHOLD,
 	.sampling_down_factor = DEF_SAMPLING_DOWN_FACTOR,
 	.ignore_nice = 1,
-	//.freq_step = 5,
+	.freq_step_down = FREQ_STEP_DOWN,
+	.freq_sleep_max = FREQ_SLEEP_MAX,
+	.freq_awake_min = FREQ_AWAKE_MIN,
+	.freq_step_up_sleep_percent = FREQ_STEP_UP_SLEEP_PERCENT,
 };
 
 static inline unsigned int get_cpu_idle_time(unsigned int cpu)
@@ -172,7 +178,10 @@ show_one(sampling_down_factor, sampling_down_factor);
 show_one(up_threshold, up_threshold);
 show_one(down_threshold, down_threshold);
 show_one(ignore_nice_load, ignore_nice);
-//show_one(freq_step, freq_step);
+show_one(freq_step_down, freq_step_down);
+show_one(freq_sleep_max, freq_sleep_max);
+show_one(freq_awake_min, freq_awake_min);
+show_one(freq_step_up_sleep_percent, freq_step_up_sleep_percent);
 
 static ssize_t store_sampling_down_factor(struct cpufreq_policy *unused,
 		const char *buf, size_t count)
@@ -281,28 +290,69 @@ static ssize_t store_ignore_nice_load(struct cpufreq_policy *policy,
 	return count;
 }
 
-/*static ssize_t store_freq_step(struct cpufreq_policy *policy,
+static ssize_t store_freq_step_down(struct cpufreq_policy *unused,
 		const char *buf, size_t count)
 {
 	unsigned int input;
 	int ret;
-
-	ret = sscanf(buf, "%u", &input);
-
-	if (ret != 1)
+	ret = sscanf (buf, "%u", &input);
+	if (input > 100 || input < 1)
 		return -EINVAL;
 
-	if (input > 100)
-		input = 100;
-
-	/ * no need to test here if freq_step is zero as the user might actually
-	 * want this, they would be crazy though :) * /
 	mutex_lock(&dbs_mutex);
-	dbs_tuners_ins.freq_step = input;
+	dbs_tuners_ins.freq_step_down = input;
 	mutex_unlock(&dbs_mutex);
 
 	return count;
-}*/
+}
+
+static ssize_t store_freq_step_up_sleep_percent(struct cpufreq_policy *policy,
+		const char *buf, size_t count)
+{
+	unsigned int input;
+	int ret;
+	ret = sscanf (buf, "%u", &input);
+	if (input > policy->cpuinfo.max_freq || input < 1)
+		return -EINVAL;
+
+	mutex_lock(&dbs_mutex);
+	dbs_tuners_ins.freq_step_up_sleep_percent = input;
+	mutex_unlock(&dbs_mutex);
+
+	return count;
+}
+
+static ssize_t store_freq_sleep_max(struct cpufreq_policy *policy,
+		const char *buf, size_t count)
+{
+	unsigned int input;
+	int ret;
+	ret = sscanf (buf, "%u", &input);
+	if (input > policy->cpuinfo.max_freq || input < policy->cpuinfo.min_freq)
+		return -EINVAL;
+
+	mutex_lock(&dbs_mutex);
+	dbs_tuners_ins.freq_sleep_max = input;
+	mutex_unlock(&dbs_mutex);
+
+	return count;
+}
+
+static ssize_t store_freq_awake_min(struct cpufreq_policy *policy,
+		const char *buf, size_t count)
+{
+	unsigned int input;
+	int ret;
+	ret = sscanf (buf, "%u", &input);
+	if (input > policy->cpuinfo.max_freq || input < policy->cpuinfo.min_freq)
+		return -EINVAL;
+
+	mutex_lock(&dbs_mutex);
+	dbs_tuners_ins.freq_awake_min = input;
+	mutex_unlock(&dbs_mutex);
+
+	return count;
+}
 
 #define define_one_rw(_name) \
 static struct freq_attr _name = \
@@ -313,7 +363,10 @@ define_one_rw(sampling_down_factor);
 define_one_rw(up_threshold);
 define_one_rw(down_threshold);
 define_one_rw(ignore_nice_load);
-//define_one_rw(freq_step);
+define_one_rw(freq_step_down);
+define_one_rw(freq_sleep_max);
+define_one_rw(freq_awake_min);
+define_one_rw(freq_step_up_sleep_percent);
 
 static struct attribute * dbs_attributes[] = {
 	&sampling_rate_max.attr,
@@ -323,7 +376,10 @@ static struct attribute * dbs_attributes[] = {
 	&up_threshold.attr,
 	&down_threshold.attr,
 	&ignore_nice_load.attr,
-	//&freq_step.attr,
+	&freq_step_down.attr,
+	&freq_sleep_max.attr,
+	&freq_awake_min.attr,
+	&freq_step_up_sleep_percent.attr,
 	NULL
 };
 
@@ -390,7 +446,7 @@ static void dbs_check_cpu(int cpu)
 
 		//freq_target = (dbs_tuners_ins.freq_step * policy->max) / 100;
 		if (suspended)
-			freq_target = (FREQ_STEP_UP_SLEEP_PERCENT * policy->max) / 100;
+			freq_target = (dbs_tuners_ins.freq_step_up_sleep_percent * policy->max) / 100;
 		else
 			freq_target = policy->max;
 
@@ -403,12 +459,12 @@ static void dbs_check_cpu(int cpu)
 			this_dbs_info->requested_freq = policy->max;
 		
 		//Screen off mode
-		if (suspended && this_dbs_info->requested_freq > FREQ_SLEEP_MAX)
-		    this_dbs_info->requested_freq = FREQ_SLEEP_MAX;
+		if (suspended && this_dbs_info->requested_freq > dbs_tuners_ins.freq_sleep_max)
+		    this_dbs_info->requested_freq = dbs_tuners_ins.freq_sleep_max;
 		    
 		//Screen off mode
-		if (!suspended && this_dbs_info->requested_freq < FREQ_AWAKE_MIN)
-		    this_dbs_info->requested_freq = FREQ_AWAKE_MIN;
+		if (!suspended && this_dbs_info->requested_freq < dbs_tuners_ins.freq_awake_min)
+		    this_dbs_info->requested_freq = dbs_tuners_ins.freq_awake_min;
 
 		__cpufreq_driver_target(policy, this_dbs_info->requested_freq,
 			CPUFREQ_RELATION_H);
@@ -449,7 +505,7 @@ static void dbs_check_cpu(int cpu)
 			return;
 
 		//freq_target = (dbs_tuners_ins.freq_step * policy->max) / 100;
-		freq_target = FREQ_STEP_DOWN; //policy->max;
+		freq_target = dbs_tuners_ins.freq_step_down; //policy->max;
 
 		/* max freq cannot be less than 100. But who knows.... */
 		if (unlikely(freq_target == 0))
@@ -465,12 +521,12 @@ static void dbs_check_cpu(int cpu)
 			this_dbs_info->requested_freq = policy->min;
 			
 		//Screen on mode
-		if (!suspended && this_dbs_info->requested_freq < FREQ_AWAKE_MIN)
-		    this_dbs_info->requested_freq = FREQ_AWAKE_MIN;
+		if (!suspended && this_dbs_info->requested_freq < dbs_tuners_ins.freq_awake_min)
+		    this_dbs_info->requested_freq = dbs_tuners_ins.freq_awake_min;
 		
 		//Screen off mode
-		if (suspended && this_dbs_info->requested_freq > FREQ_SLEEP_MAX)
-		    this_dbs_info->requested_freq = FREQ_SLEEP_MAX;
+		if (suspended && this_dbs_info->requested_freq > dbs_tuners_ins.freq_sleep_max)
+		    this_dbs_info->requested_freq = dbs_tuners_ins.freq_sleep_max;
 
 		__cpufreq_driver_target(policy, this_dbs_info->requested_freq,
 				CPUFREQ_RELATION_H);
