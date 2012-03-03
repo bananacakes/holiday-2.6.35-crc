@@ -91,6 +91,9 @@ static void print_cfs_group_stats(struct seq_file *m, int cpu,
 	(defined(CONFIG_FAIR_GROUP_SCHED) || defined(CONFIG_RT_GROUP_SCHED))
 static void task_group_path(struct task_group *tg, char *buf, int buflen)
 {
+	if (autogroup_path(tg, group_path, PATH_MAX))
+		return group_path;
+
 	/* may be NULL if the underlying cgroup isn't fully-created yet */
 	if (!tg->css.cgroup) {
 		if (!autogroup_path(tg, buf, buflen))
