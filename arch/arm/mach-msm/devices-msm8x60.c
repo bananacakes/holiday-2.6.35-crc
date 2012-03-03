@@ -543,6 +543,17 @@ static struct msm_bus_vectors grp3d_max_vectors[] = {
 	},
 };
 
+#ifdef CONFIG_GPU_TURBO_BOOST
+static struct msm_bus_vectors grp3d_oc_vectors[] = {
+	{
+		.src = MSM_BUS_MASTER_GRAPHICS_3D,
+		.dst = MSM_BUS_SLAVE_EBI_CH0,
+		.ab = 0,
+		.ib = 2872000000U,
+	},
+};
+#endif	/* GPU_TURBO_BOOST */
+
 static struct msm_bus_paths grp3d_bus_scale_usecases[] = {
 	{
 		ARRAY_SIZE(grp3d_init_vectors),
@@ -560,6 +571,12 @@ static struct msm_bus_paths grp3d_bus_scale_usecases[] = {
 		ARRAY_SIZE(grp3d_max_vectors),
 		grp3d_max_vectors,
 	},
+#ifdef CONFIG_GPU_TURBO_BOOST
+	{
+		ARRAY_SIZE(grp3d_oc_vectors),
+		grp3d_oc_vectors,
+	},
+#endif	/* GPU_TURBO_BOOST */
 };
 
 static struct msm_bus_scale_pdata grp3d_bus_scale_pdata = {
@@ -661,6 +678,12 @@ static struct resource kgsl_3d0_resources[] = {
 static struct kgsl_device_platform_data kgsl_3d0_pdata = {
 	.pwr_data = {
 		.pwrlevel = {
+#ifdef CONFIG_GPU_TURBO_BOOST
+		{
+			.gpu_freq = 320000000,
+			.bus_freq = 4,
+		},
+#endif /* GPU_TURBO_BOOST */
 			{
 				.gpu_freq = 266667000,
 				.bus_freq = 3,
@@ -679,7 +702,11 @@ static struct kgsl_device_platform_data kgsl_3d0_pdata = {
 			},
 		},
 		.init_level = 0,
+#ifdef CONFIG_GPU_TURBO_BOOST
+		.num_levels = 5,
+#else
 		.num_levels = 4,
+#endif /* GPU_TURBO_BOOST */
 		.set_grp_async = NULL,
 		.idle_timeout = HZ/5,
 #ifdef CONFIG_MSM_BUS_SCALING
