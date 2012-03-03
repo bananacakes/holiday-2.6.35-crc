@@ -560,6 +560,7 @@ static void dbs_freq_increase(struct cpufreq_policy *p, unsigned int freq)
 	__cpufreq_driver_target(p, freq, dbs_tuners_ins.powersave_bias ?
 			CPUFREQ_RELATION_L : CPUFREQ_RELATION_H);
 }
+
 #ifdef CONFIG_CPU_FREQ_GOV_ONDEMAND_2_PHASE
 int set_two_phase_freq(int cpufreq)
 {
@@ -571,6 +572,7 @@ int set_two_phase_freq(int cpufreq)
 static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 {
 	unsigned int max_load_freq;
+
 	struct cpufreq_policy *policy;
 	unsigned int j;
 #ifdef CONFIG_CPU_FREQ_GOV_ONDEMAND_2_PHASE
@@ -688,7 +690,7 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 			dbs_freq_increase(policy, policy->max);
 		}
 #endif
-	return;
+		return;
 	}
 #ifdef CONFIG_CPU_FREQ_GOV_ONDEMAND_2_PHASE
 	if (counter > 0) {

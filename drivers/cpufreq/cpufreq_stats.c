@@ -171,7 +171,6 @@ static int freq_table_get_index(struct cpufreq_stats *stat, unsigned int freq)
 static void cpufreq_stats_free_table(unsigned int cpu)
 {
 	struct cpufreq_stats *stat = per_cpu(cpufreq_stats_table, cpu);
-
 	if (stat) {
 		kfree(stat->time_in_state);
 		kfree(stat);
@@ -276,11 +275,9 @@ static int cpufreq_stat_notifier_policy(struct notifier_block *nb,
 	table = cpufreq_frequency_get_table(cpu);
 	if (!table)
 		return 0;
-
 	ret = cpufreq_stats_create_table(policy, table);
 	if (ret)
 		return ret;
-
 	return 0;
 }
 
@@ -393,7 +390,6 @@ static void __exit cpufreq_stats_exit(void)
 	unregister_hotcpu_notifier(&cpufreq_stat_cpu_notifier);
 	for_each_online_cpu(cpu) {
 		cpufreq_stats_free_table(cpu);
-		cpufreq_stats_free_sysfs(cpu);
 	}
 }
 
