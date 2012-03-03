@@ -392,7 +392,7 @@ static ssize_t pcm_out_write(struct file *file, const char __user *buf,
 				(atomic_read(&pcm->out_count) ||
 				atomic_read(&pcm->out_stopped)), 5 * HZ);
 		if (!rc) {
-			pr_aud_err("%s: wait_event_timeout failed for session %d\n",
+			pr_aud_info("%s: wait_event_timeout failed for session %d\n",
 				__func__, pcm->ac->session);
 			goto fail;
 		}

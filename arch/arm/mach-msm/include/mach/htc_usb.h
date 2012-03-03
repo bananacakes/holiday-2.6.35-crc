@@ -242,6 +242,35 @@ static char *usb_functions_acm[] = {
 };
 #endif
 
+static char *usb_functions_adb_diag_modem_svlte2[] = {
+	"usb_mass_storage",
+	"adb",
+	"diag",
+	"modem",
+	"modem_mdm",
+	"diag_mdm",
+};
+
+static char *usb_functions_diag_modem_svlte2[] = {
+	"usb_mass_storage",
+	"diag",
+	"modem",
+	"modem_mdm",
+	"diag_mdm",
+};
+
+static char *usb_functions_adb_modem_svlte2[] = {
+	"usb_mass_storage",
+	"adb",
+	"modem",
+	"modem_mdm",
+};
+
+static char *usb_functions_modem_svlte2[] = {
+	"usb_mass_storage",
+	"modem",
+	"modem_mdm",
+};
 
 static char *usb_functions_adb_diag_modem_svlte2_rment[] = {
 	"usb_mass_storage",
@@ -692,6 +721,26 @@ static struct android_usb_product usb_products[] = {
 		.product_id	= 0x0fd0,
 		.num_functions	= ARRAY_SIZE(usb_functions_diag_modem_svlte2_rment),
 		.functions	= usb_functions_diag_modem_svlte2_rment,
+	},
+	{
+		.product_id	= 0x0fc9,
+		.num_functions	= ARRAY_SIZE(usb_functions_adb_diag_modem_svlte2),
+		.functions	= usb_functions_adb_diag_modem_svlte2,
+	},
+	{
+		.product_id	= 0x0fca,
+		.num_functions	= ARRAY_SIZE(usb_functions_diag_modem_svlte2),
+		.functions	= usb_functions_diag_modem_svlte2,
+	},
+	{
+		.product_id	= 0x0fcb,
+		.num_functions	= ARRAY_SIZE(usb_functions_adb_modem_svlte2),
+		.functions	= usb_functions_adb_modem_svlte2,
+	},
+	{
+		.product_id	= 0x0fcc,
+		.num_functions	= ARRAY_SIZE(usb_functions_modem_svlte2),
+		.functions	= usb_functions_modem_svlte2,
 	},
 };
 #endif /* CONFIG_USB_ANDROID */
