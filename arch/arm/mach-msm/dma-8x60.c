@@ -28,7 +28,9 @@
 #else
 #define SD_ID 8
 #endif
-#define DMA_CLK_TIMER 100 /* 100 ms */
+#define DMA_CLK_TIMER 50 /* 50 ms*/
+#define DMA_CLK_TIMER_MFG 250 /* 250 ms */
+
 #define MODULE_NAME "msm_dmov"
 
 #define MSM_DMOV_CHANNEL_COUNT 16
@@ -73,6 +75,8 @@ struct msm_dmov_conf {
 	unsigned int clk_ctl;
 	struct timer_list timer;
 };
+
+int board_build_flag(void);
 
 static void msm_dmov_clock_timer(unsigned long);
 static int msm_dmov_clk_toggle(int, int);
@@ -434,7 +438,10 @@ void msm_dmov_enqueue_cmd_ext(unsigned id, struct msm_dmov_cmd *cmd)
 	} else {
 		if (!dmov_conf[adm].channel_active) {
 			dmov_conf[adm].clk_ctl = CLK_TO_BE_DIS;
-			mod_timer(&dmov_conf[adm].timer, jiffies + msecs_to_jiffies(DMA_CLK_TIMER));
+			if (board_build_flag() == 1)
+				mod_timer(&dmov_conf[adm].timer, jiffies + msecs_to_jiffies(DMA_CLK_TIMER_MFG));
+			else
+				mod_timer(&dmov_conf[adm].timer, jiffies + msecs_to_jiffies(DMA_CLK_TIMER));
 		}
 		if (list_empty(&dmov_conf[adm].active_commands[ch])
 		    && !conflict)
@@ -665,7 +672,10 @@ static irqreturn_t msm_datamover_irq_handler(int irq, void *dev_id)
 	if (!dmov_conf[adm].channel_active) {
 		disable_irq_nosync(dmov_conf[adm].irq);
 		dmov_conf[adm].clk_ctl = CLK_TO_BE_DIS;
-		mod_timer(&dmov_conf[adm].timer, jiffies + msecs_to_jiffies(DMA_CLK_TIMER));
+		if (board_build_flag() == 1)
+			mod_timer(&dmov_conf[adm].timer, jiffies + msecs_to_jiffies(DMA_CLK_TIMER_MFG));
+		else
+			mod_timer(&dmov_conf[adm].timer, jiffies + msecs_to_jiffies(DMA_CLK_TIMER));
 	}
 
 	spin_unlock_irqrestore(&dmov_conf[adm].lock, irq_flags);
