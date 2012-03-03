@@ -566,6 +566,7 @@ projector_function_unbind(struct usb_configuration *c, struct usb_function *f)
 	spin_unlock_irq(&dev->lock);
 }
 
+#ifdef CONFIG_USB_GADGET_DYNAMIC_ENDPOINT
 static void
 projector_function_release(struct usb_configuration *c, struct usb_function *f)
 {
@@ -584,6 +585,7 @@ projector_function_release(struct usb_configuration *c, struct usb_function *f)
 	/* spin_unlock_irq(&dev->lock); */
 	usb_interface_id_remove(c, 1);
 }
+#endif
 
 static int projector_function_set_alt(struct usb_function *f,
 		unsigned intf, unsigned alt)
@@ -777,11 +779,12 @@ static int projector_bind_config(struct usb_configuration *c)
 	dev->function.hs_descriptors = hs_projector_descs;
 	dev->function.bind = projector_function_bind;
 	dev->function.unbind = projector_function_unbind;
-	dev->function.release = projector_function_release;
 	dev->function.set_alt = projector_function_set_alt;
 	dev->function.disable = projector_function_disable;
-	dev->function.dynamic = 1;
-
+#ifdef CONFIG_USB_GADGET_DYNAMIC_ENDPOINT
+	dev->function.release = projector_function_release;
+	//dev->function.dynamic = 1;
+#endif
 	/* start disabled */
 	dev->function.hidden = 1;
 
