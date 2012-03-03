@@ -40,6 +40,7 @@
 #include <linux/log2.h>
 #include <linux/crc16.h>
 #include <linux/reboot.h>
+#include <linux/cleancache.h>	
 #include <asm/uaccess.h>
 
 #include "ext4.h"
@@ -1793,6 +1794,7 @@ static int ext4_setup_super(struct super_block *sb, struct ext4_super_block *es,
 			EXT4_INODES_PER_GROUP(sb),
 			sbi->s_mount_opt);
 
+	cleancache_init_fs(sb);
 	return res;
 }
 
