@@ -2141,10 +2141,7 @@ EXPORT_SYMBOL_GPL(cpufreq_unregister_driver);
 
 static int __init cpufreq_core_init(void)
 {
-	int cpu;
-	#ifdef CONFIG_CPU_VOLTAGE_TABLE
-	int rc;
-	#endif	/* CONFIG_CPU_VOLTAGE_TABLE */
+	int cpu, rc;
 
 	for_each_possible_cpu(cpu) {
 		per_cpu(cpufreq_policy_cpu, cpu) = -1;
@@ -2157,8 +2154,6 @@ static int __init cpufreq_core_init(void)
 
 #ifdef CONFIG_CPU_VOLTAGE_TABLE
 	rc = sysfs_create_group(cpufreq_global_kobject, &vddtbl_attr_group);
-#else
-	rc = 0;
 #endif	/* CONFIG_CPU_VOLTAGE_TABLE */
 
 	return 0;
