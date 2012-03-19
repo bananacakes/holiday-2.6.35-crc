@@ -59,6 +59,8 @@ obj-$(CONFIG_BCM4329_CES)	+= bcm4329_CES/
 
 obj-$(CONFIG_BCM4329_248)   += bcm4329_248/
 
+obj-$(CONFIG_BCMDHD)	+= bcmdhd/
+
 obj-$(CONFIG_BCM4330)   += bcm4330/
 
 obj-$(CONFIG_BCM4330B2)   += bcm4330b2/
