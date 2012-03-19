@@ -440,7 +440,7 @@ static unsigned PP[16];
 
 
 
-#define BITS_PER_PIXEL 16
+#define BITS_PER_PIXEL 32
 
 static void setup_fb_info(struct msmfb_info *msmfb)
 {
@@ -466,7 +466,7 @@ static void setup_fb_info(struct msmfb_info *msmfb)
 	fb_info->var.yres_virtual = msmfb->yres * 2;
 	fb_info->var.bits_per_pixel = BITS_PER_PIXEL;
 	fb_info->var.accel_flags = 0;
-
+	fb_info->var.reserved[5] = 60;
 	fb_info->var.yoffset = 0;
 
 	if (msmfb->panel->caps & MSMFB_CAP_PARTIAL_UPDATES) {
