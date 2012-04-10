@@ -515,6 +515,15 @@ static struct msm_bus_vectors grp3d_init_vectors[] = {
 	},
 };
 
+static struct msm_bus_vectors grp3d_low_vectors[] = {
+	{
+		.src = MSM_BUS_MASTER_GRAPHICS_3D,
+		.dst = MSM_BUS_SLAVE_EBI_CH0,
+		.ab = 0,
+		.ib = 990000000U,
+	},
+};
+
 static struct msm_bus_vectors grp3d_nominal_low_vectors[] = {
 	{
 		.src = MSM_BUS_MASTER_GRAPHICS_3D,
@@ -560,6 +569,10 @@ static struct msm_bus_paths grp3d_bus_scale_usecases[] = {
 		grp3d_init_vectors,
 	},
 	{
+		ARRAY_SIZE(grp3d_low_vectors),
+		grp3d_low_vectors,
+	},
+	{
 		ARRAY_SIZE(grp3d_nominal_low_vectors),
 		grp3d_nominal_low_vectors,
 	},
@@ -600,8 +613,8 @@ static struct msm_bus_vectors grp2d0_max_vectors[] = {
 		.src = MSM_BUS_MASTER_GRAPHICS_2D_CORE0,
 		.dst = MSM_BUS_SLAVE_EBI_CH0,
 		.ab = 0,
-		// .ib = 248000000,
-		.ib = 2096000000U,	// HTC:
+		// .ib = 2096000000,	// HTC:
+		.ib = 990000000U,
 	},
 };
 
@@ -636,8 +649,8 @@ static struct msm_bus_vectors grp2d1_max_vectors[] = {
 		.src = MSM_BUS_MASTER_GRAPHICS_2D_CORE1,
 		.dst = MSM_BUS_SLAVE_EBI_CH0,
 		.ab = 0,
-		// .ib = 248000000,		
-		.ib = 2096000000U,		// HTC
+		// .ib = 2096000000,		// HTC
+		.ib = 990000000U,
 	},
 };
 
@@ -695,6 +708,10 @@ static struct kgsl_device_platform_data kgsl_3d0_pdata = {
 			{
 				.gpu_freq = 200000000,
 				.bus_freq = 1,
+			},
+			{
+				.gpu_freq = 177778000,
+				.bus_freq = 1
 			},
 			{
 				.gpu_freq = 27000000,
