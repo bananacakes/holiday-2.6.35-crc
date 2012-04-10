@@ -49,8 +49,6 @@ struct cpufreq_suspend_t {
 
 static DEFINE_PER_CPU(struct cpufreq_suspend_t, cpufreq_suspend);
 
-static int override_cpu;
-
 #define dprintk(msg...) \
 		cpufreq_debug_printk(CPUFREQ_DEBUG_DRIVER, "cpufreq-msm", msg)
 
@@ -60,13 +58,7 @@ static int set_cpu_freq(struct cpufreq_policy *policy, unsigned int new_freq)
 	struct cpufreq_freqs freqs;
 
 	freqs.old = policy->cur;
-	if (override_cpu) {
-		if (policy->cur == policy->max)
-			return 0;
-		else
-			freqs.new = policy->max;
-	} else
-		freqs.new = new_freq;
+	freqs.new = new_freq;
 	freqs.cpu = policy->cpu;
 	cpufreq_notify_transition(&freqs, CPUFREQ_PRECHANGE);
 #ifdef CONFIG_ARCH_MSM8X60
@@ -125,6 +117,11 @@ static int msm_cpufreq_target(struct cpufreq_policy *policy,
 			&index)) {
 		pr_err("cpufreq: invalid target_freq: %d\n", target_freq);
 		ret = -EINVAL;
+		goto done;
+	}
+
+	if (policy->cur == table[index].frequency) {
+		ret = 0;
 		goto done;
 	}
 
@@ -200,8 +197,8 @@ static int __cpuinit msm_cpufreq_init(struct cpufreq_policy *policy)
 	cur_freq = acpuclk_get_rate(policy->cpu);
 	if (cpufreq_frequency_table_target(policy, table, cur_freq,
 				CPUFREQ_RELATION_H, &index) &&
-		cpufreq_frequency_table_target(policy, table, cur_freq,
-		CPUFREQ_RELATION_L, &index)) {
+	    cpufreq_frequency_table_target(policy, table, cur_freq,
+	    CPUFREQ_RELATION_L, &index)) {
 		pr_info("cpufreq: cpu%d at invalid freq: %d\n",
 				policy->cpu, cur_freq);
 		return -EINVAL;
@@ -273,28 +270,9 @@ static int msm_cpufreq_pm_event(struct notifier_block *this,
 	}
 }
 
-static ssize_t store_mfreq(struct sysdev_class *class,
-			struct sysdev_class_attribute *attr,
-			const char *buf, size_t count)
-{
-	u64 val;
-
-	if (strict_strtoull(buf, 0, &val) < 0) {
-		pr_err("Invalid parameter to mfreq\n");
-		return 0;
-	}
-	if (val)
-		override_cpu = 1;
-	else
-		override_cpu = 0;
-	return count;
-}
-
-static SYSDEV_CLASS_ATTR(mfreq, 0200, NULL, store_mfreq);
-
 static struct freq_attr *msm_cpufreq_attr[] = {
-    &cpufreq_freq_attr_scaling_available_freqs,
-    NULL,
+	&cpufreq_freq_attr_scaling_available_freqs,
+	NULL,
 };
 
 static struct cpufreq_driver msm_cpufreq_driver = {
@@ -314,11 +292,6 @@ static struct notifier_block msm_cpufreq_pm_notifier = {
 static int __init msm_cpufreq_register(void)
 {
 	int cpu;
-
-	int err = sysfs_create_file(&cpu_sysdev_class.kset.kobj,
-			&attr_mfreq.attr);
-	if (err)
-		pr_err("Failed to create sysfs mfreq\n");
 
 	for_each_possible_cpu(cpu) {
 		mutex_init(&(per_cpu(cpufreq_suspend, cpu).suspend_mutex));
