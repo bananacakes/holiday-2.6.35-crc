@@ -63,11 +63,7 @@
 #define MIN_VDD_SC		 800000 /* uV */
 #define MAX_AXI			 310500 /* KHz */
 #define SCPLL_LOW_VDD_FMAX	 594000 /* KHz */
-#ifdef CONFIG_ARCH_MSM8X60_LTE
-#define SCPLL_LOW_VDD		1030000 /* uV */
-#else
 #define SCPLL_LOW_VDD		1000000 /* uV */
-#endif
 #define SCPLL_NOMINAL_VDD	1100000 /* uV */
 
 /* SCPLL Modes. */
